@@ -7,7 +7,7 @@ Cómo funciona la selección (tabla de verdad S1, S0 → salida) y la maquina de
 <img width="975" height="419" alt="image" src="https://github.com/user-attachments/assets/981fa6cd-9496-49d9-8fc5-76a1d5e53d51" />
 
 
-Archivos del diseño (Modulo funcional) y testbench
+Archivos: `mux_param_3.v`,`mux_param_3_tb.sv`.
 
 Archivo de texto sobre(resultados_mux_3_texto) que genera la simulación (funcionalidad comprobada)
 <img width="975" height="1164" alt="image" src="https://github.com/user-attachments/assets/3f0aae85-a516-4b1f-95c9-76aaf951b27d" />
