@@ -1,6 +1,6 @@
 Objetivo MUX 4-to-1 parametrizado con ancho de datos variable (4, 8 y 16 bits)
 
-Cómo funciona la selección (tabla de verdad S1, S0 → salida) y la maquina de estado usada en el modulo funcional
+Cómo funciona la selección (tabla de verdad S1, S0 → salida) y la maquina de estado usada en el módulo funcional
 
 <img width="856" height="198" alt="image" src="https://github.com/user-attachments/assets/1d676cab-3b74-4ae3-bc2f-b54135d2b5ac" />
 
@@ -13,7 +13,7 @@ Archivo de texto sobre(resultados_mux_3_texto) que genera la simulación (funcio
 <img width="975" height="1164" alt="image" src="https://github.com/user-attachments/assets/3f0aae85-a516-4b1f-95c9-76aaf951b27d" />
 
 
-Guia en vivado:
-1. Agregar `mux_param_3.v` como Design Source
-2. Agregar `mux_param_3_tb.sv` como Simulation Source
+Guia en vivado:<br>
+1. Agregar `mux_param_3.v` como Design Source <br>
+2. Agregar `mux_param_3_tb.sv` como Simulation Source<br>
 3. Correr simulación y revisar el archivo de resultados generado
