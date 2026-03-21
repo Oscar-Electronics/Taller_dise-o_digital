@@ -1,6 +1,6 @@
-Instituto Tecnológico de Costa Rica ,
-Escuela de Ingeniería Electrónica ,Curso:
-Taller de diseño digital (EL3313) ,
+Instituto Tecnológico de Costa Rica <br>
+Escuela de Ingeniería Electrónica <br> Curso:
+Taller de diseño digital (EL3313) <br>
 Profesor: Kaleb Alfaro Bonilla, M.Sc. 
 
 Estudiantes: 
@@ -10,6 +10,6 @@ Estudiantes:
 2021021770 - Sánchez Herrera Angélica 
 
 Laboratio 1:
-En la carpeta Laboratorio 1 se encuentran la resolucion de los 4 problemas, cada uno con su propio README, esos README contienen informacion sobre el problema, los archivos que contiene el github especifico del problema, una guía de como hacer la instalación en el vivadol, un link con un video de la verificación del código en la FPGA para los problemas pertinentes y la logica usada.
+En la carpeta Laboratorio 1 se encuentran la resolución de los 4 problemas, cada uno con su respectivo README, en el que se puede encontrar información sobre el problema, el repositirio específico del problema, indicación de cuáles archivos implementar en Vivado para el debido funcionamiento, además de un link con un video de la verificación de la implementación en la FPGA para los problemas pertinentes y la lógica utilizada.
 
 En el PDF titulado (Documentacion Lab 1 - Oscar, Raquel, Andres y Angelica) esta en más detalle los procesos y el como se completo cada problema todo en un mismo lugar.
