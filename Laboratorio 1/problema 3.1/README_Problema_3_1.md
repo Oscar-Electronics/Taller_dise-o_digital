@@ -6,9 +6,9 @@ Archivos: ejercicio_3_1.v (módulo), tb_ejercicio_1.sv (testbench)
 
 Link al video de verificación en FPGA: https://youtu.be/MkBTeuorBac 
 
-Como usar en vivado:
+Como usar en vivado:<br>
 
-1-Agregar `ejercicio_3_1.v` como Design Source
-2. Agregar `tb_ejercicio_1.sv` como Simulation Source
-3. Agregar `MasterFile.xdc` como Constraints
-4. Correr simulación y luego generar bitstream
+1-Agregar `ejercicio_3_1.v` como Design Source<br>
+2. Agregar `tb_ejercicio_1.sv` como Simulation Source<br>
+3. Agregar `MasterFile.xdc` como Constraints<br>
+4. Correr simulación y luego generar bitstream<br>
