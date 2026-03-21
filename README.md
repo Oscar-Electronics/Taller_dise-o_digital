@@ -1,7 +1,7 @@
-Instituto Tecnológico de Costa Rica 
-Escuela de Ingeniería Electrónica 
-Taller de diseño digital (EL3313) 
-Prof. Kaleb Alfaro Bonilla, M.Sc. 
+Instituto Tecnológico de Costa Rica ,
+Escuela de Ingeniería Electrónica ,Curso:
+Taller de diseño digital (EL3313) ,
+Profesor: Kaleb Alfaro Bonilla, M.Sc. 
 
 Estudiantes: 
 2021155576 - Bolaños Solís Oscar 
