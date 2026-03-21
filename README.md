@@ -3,7 +3,7 @@ Escuela de Ingeniería Electrónica <br> Curso:
 Taller de diseño digital (EL3313) <br>
 Profesor: Kaleb Alfaro Bonilla, M.Sc. 
 
-Estudiantes: <br>
+Estudiantes Grupo 2: <br>
 2021155576 - Bolaños Solís Oscar <br>
 2022207101 - Bou Espinoza Raquel <br>
 2022195304 - Lobo Campos Andrés <br>
