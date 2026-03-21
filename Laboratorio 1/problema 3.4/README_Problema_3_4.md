@@ -8,13 +8,13 @@ Diagrama de bloques y Maquina de estado(hello world):
 
 <img width="975" height="603" alt="image" src="https://github.com/user-attachments/assets/59d45fbd-7c1b-437f-913e-85a4e2c34688" />
 
-Link verificacion:
+Link verificación:
 
 https://www.youtube.com/shorts/exAvfGnB9Y8
 
-guia vivado:
-1.Agregar todos los archivos de `/UART usada` como Design Sources, todos menos los que estan en la carpeta `/test`
-2. Agregar `Top_Todo.v` como módulo top
-3. Agregar constraints y generar bitstream
-4. Conectar por puerto serial con Tera Term a 9600 baudios
+guia vivado:<br>
+1.Agregar todos los archivos de `/UART usada` como Design Sources, todos menos los que estan en la carpeta `/test` <br>
+2. Agregar `Top_Todo.v` como módulo top<br>
+3. Agregar constraints y generar bitstream<br>
+4. Conectar por puerto serial con Tera Term a 9600 baudios<br>
 5.Probarlo
