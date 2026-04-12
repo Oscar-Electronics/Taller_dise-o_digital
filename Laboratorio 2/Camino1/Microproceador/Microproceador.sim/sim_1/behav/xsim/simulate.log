@@ -1,0 +1,9 @@
+Time resolution is 1 ps
+ Block Memory Generator module loading initial data...
+ Block Memory Generator data initialization complete.
+Block Memory Generator module top_microprocesador.rom.inst.native_mem_mapped_module.blk_mem_gen_v8_4_9_inst is using a behavioral model for simulation which will not precisely model memory collision behavior.
+Block Memory Generator module top_microprocesador.ram.inst.native_mem_module.blk_mem_gen_v8_4_9_inst is using a behavioral model for simulation which will not precisely model memory collision behavior.
+WARNING: 0ns : none of the conditions were true for unique case from File:C:/Users/raque/Documents/Proyectos_Taller_Digitales/Proyecto2/Proyecto2/Microproceador/scr/uart/uart_tx.sv:51
+WARNING: 0ns : none of the conditions were true for unique case from File:C:/Users/raque/Documents/Proyectos_Taller_Digitales/Proyecto2/Proyecto2/Microproceador/scr/uart/uart_tx.sv:84
+WARNING: 0ns : none of the conditions were true for unique case from File:C:/Users/raque/Documents/Proyectos_Taller_Digitales/Proyecto2/Proyecto2/Microproceador/scr/uart/uart_rx.sv:69
+WARNING: 0ns : none of the conditions were true for unique case from File:C:/Users/raque/Documents/Proyectos_Taller_Digitales/Proyecto2/Proyecto2/Microproceador/scr/uart/uart_rx.sv:69

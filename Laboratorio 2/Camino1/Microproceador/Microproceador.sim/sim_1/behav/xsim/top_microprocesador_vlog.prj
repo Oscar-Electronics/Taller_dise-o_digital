@@ -1,0 +1,22 @@
+# compile verilog/system verilog design source files
+verilog xil_defaultlib  \
+"../../../../Microproceador.gen/sources_1/ip/blk_mem_gen_1/sim/blk_mem_gen_1.v" \
+"../../../../Microproceador.gen/sources_1/ip/blk_mem_gen_0/sim/blk_mem_gen_0.v" \
+"../../../../scr/riscv/picorv32.v" \
+
+sv xil_defaultlib  \
+"../../../../scr/uart/fifo.sv" \
+"../../../../scr/uart/fifo_ctrl.sv" \
+"../../../../scr/uart/fifo_mem.sv" \
+"../../../../scr/uart/uart.sv" \
+"../../../../scr/uart/uart_rx.sv" \
+"../../../../scr/uart/uart_tx.sv" \
+
+verilog xil_defaultlib  \
+"../../../../scr/top/top_microprocesador.v" \
+
+# compile glbl module
+verilog xil_defaultlib "glbl.v"
+
+# Do not sort compile order
+nosort
