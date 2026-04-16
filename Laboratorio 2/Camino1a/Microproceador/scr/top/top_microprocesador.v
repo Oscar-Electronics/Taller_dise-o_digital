@@ -1,278 +1,223 @@
 `timescale 1ns / 1ps
+//entradas y salidas del modulo
 
 module top_microprocesador (
-    input  wire CLK100MHZ,
-    input  wire reset_n,     // C12 - reset físico activo en bajo
-    input  wire btn_n17,     // N17 - botón adicional
-    input  wire uart_rx,
-    output wire uart_tx
+    input  wire CLK100MHZ,      // Pin E3
+  input  wire reset_n,        // Pin C12 (CPU_RESET - activo en bajo)
+  input  wire btn_n17,        // Pin N17 (boton central)
+    input  wire uart_rx,        // Pin C4
+    output wire uart_tx         // Pin D4
 );
 
-    // =====================================
-    // Reset interno activo en alto
-    // =====================================
-    wire reset;
-    assign reset = ~reset_n;
+  //señales internas del top
+  
+  
+  //señales del cloking wizard
+    wire clk_stable;    // reloj de salida estable
+    wire locked;        // 1 cuando el reloj es estable
+    wire sys_reset;     // reset interno
+  //se instancia el clocking wizard i se conectan sus señales de entradas y salidas a las señales internas del top
+    clk_wiz_0 clk_inst (
+      .clk_out1(clk_stable),  // reloj estable
+      .resetn(reset_n),       // reset, activo en bajo
+      .locked(locked),        // reloj estable
+      .clk_in1(CLK100MHZ)     // reloj de la placa
+    );
 
-    // =====================================
-    // Señales del core PicoRV32
-    // =====================================
-    wire        mem_valid;
-    wire        mem_instr;
-    reg         mem_ready;
-    wire [31:0] mem_addr;
-    wire [31:0] mem_wdata;
-    wire [ 3:0] mem_wstrb;
-    reg  [31:0] mem_rdata;
-    wire        trap;
+    // el sistema se mantiene en reset, hasta que se estabiliza el reloj
+    assign sys_reset = ~locked;
 
-    // =====================================
-    // Señales de la UART
-    // =====================================
-    reg  [7:0] uart_tx_data;
-    reg        uart_tx_req;
-    reg        uart_rx_req;
+  //señales del picoRV32
+    wire        mem_valid;
+    wire        mem_instr;
+    reg         mem_ready;
+    wire [31:0] mem_addr;
+    wire [31:0] mem_wdata;
+    wire [ 3:0] mem_wstrb;
+    reg  [31:0] mem_rdata;
+    wire        trap;
 
-    wire [7:0] uart_rx_data;
-    wire       uart_rx_rdy;
-    wire       uart_tx_rdy;
-    wire       uart_tx_empty;
-    wire       uart_rx_error;
+//señales de la uart
+    reg  [7:0]  uart_tx_data;
+    reg         uart_tx_req;
+    reg         uart_rx_req;
+    wire [7:0]  uart_rx_data;
+    wire        uart_rx_rdy;
+    wire        uart_tx_rdy;
+    wire        uart_tx_empty;
+    wire        uart_rx_error;
+    
+  //registro para los leds
+    reg  [31:0] leds_reg;
+  //se establecen las direcciones de memoria para los distintos modulos y a que corresponden con el mapa de memoria
+   //mapa de memoria(basado en el del instructivo)
+    wire sel_rom        = mem_valid && (mem_addr >= 32'h0000_0000) && (mem_addr <= 32'h0000_07FC);
+    wire sel_sw_btn     = mem_valid && (mem_addr == 32'h0000_2000);
+    wire sel_leds       = mem_valid && (mem_addr == 32'h0000_2004);
+    wire sel_uart_ctrl  = mem_valid && (mem_addr == 32'h0000_2010);
+    wire sel_uart_data1 = mem_valid && (mem_addr == 32'h0000_2018);
+    wire sel_ram        = mem_valid && (mem_addr >= 32'h0004_0000);
 
-    wire uart_rts;
-    wire uart_cts;
+ //pioeline para la latencia de la RAM y ROM de 1 ciclo
+    reg rom_pending;
+    reg ram_pending;
 
-    assign uart_cts = 1'b0;
+    always @(posedge clk_stable or posedge sys_reset) begin
+        if (sys_reset) begin
+            rom_pending <= 1'b0;
+            ram_pending <= 1'b0;
+        end else begin
+            // logica para la ROM
+            if (sel_rom && !rom_pending)
+                rom_pending <= 1'b1;
+            else
+                rom_pending <= 1'b0;
 
-    // =====================================
-    // Registro simple de LEDs / debug
-    // =====================================
-    reg [31:0] leds_reg;
+            // logica para RAM
+            if (sel_ram && !ram_pending)
+                ram_pending <= 1'b1;
+            else
+                ram_pending <= 1'b0;
+        end
+    end
 
-    // =====================================
-    // Mapa de memoria
-    // =====================================
-    wire sel_rom;
-    wire sel_sw_btn;
-    wire sel_leds;
-    wire sel_uart_ctrl;
-    wire sel_uart_data1;
-    wire sel_uart_data2;
-    wire sel_ram;
+ //instanciar los modulos 
+  
 
-    assign sel_rom        = mem_valid && (mem_addr >= 32'h0000_0000) && (mem_addr <= 32'h0000_07FC);
-    assign sel_sw_btn     = mem_valid && (mem_addr == 32'h0000_2000);
-    assign sel_leds       = mem_valid && (mem_addr == 32'h0000_2004);
-    assign sel_uart_ctrl  = mem_valid && (mem_addr == 32'h0000_2010);
-    assign sel_uart_data1 = mem_valid && (mem_addr == 32'h0000_2018);
-    assign sel_uart_data2 = mem_valid && (mem_addr == 32'h0000_201C);
-    assign sel_ram        = mem_valid && (mem_addr >= 32'h0004_0000);
+    //se instancia el picorv32 y se conectan las señales de entrada y salida del modulo de cpu a sus respectivas señales internas del top.
+    picorv32 cpu (
+        .clk       (clk_stable),
+        .resetn    (~sys_reset), //se toma un reset, pero como el picorv32 utiliza un reser activo en bajo se invierte.
+        .trap      (trap),
+        .mem_valid (mem_valid),
+        .mem_instr (mem_instr),
+        .mem_ready (mem_ready),
+        .mem_addr  (mem_addr),
+        .mem_wdata (mem_wdata),
+        .mem_wstrb (mem_wstrb),
+        .mem_rdata (mem_rdata),
+        .irq       (32'b0),
+        .eoi       ()
+    );
 
-    // =====================================
-    // Instancia del núcleo RISC-V
-    // =====================================
-    picorv32 cpu (
-        .clk       (CLK100MHZ),
-        .resetn    (~reset),
-        .trap      (trap),
+    //se instancia la uart
+    uart #(
+      //se cargan los parametros para las comunicaciones por uart
+      .SystemClockFreq (100_000_000), // basado en el reloj del clockin wizard
+        .BaudRate        (9600)
+      //se conectan las señales de entrada y salida del modulo de uart a sus respectivas señales internas del top.
+    ) uart_inst (
+        .i_rst_n    (~sys_reset),
+        .i_clk      (clk_stable),
+        .i_tx_data  (uart_tx_data),
+        .o_rx_data  (uart_rx_data),
+        .i_tx_req   (uart_tx_req),
+        .i_rx_req   (uart_rx_req),
+        .o_rx_rdy   (uart_rx_rdy),
+        .o_tx_rdy   (uart_tx_rdy),
+        .i_rx       (uart_rx),
+        .o_tx       (uart_tx),
+        .i_cts      (1'b0),
+        .o_rts      ()
+    );
 
-        .mem_valid (mem_valid),
-        .mem_instr (mem_instr),
-        .mem_ready (mem_ready),
-        .mem_addr  (mem_addr),
-        .mem_wdata (mem_wdata),
-        .mem_wstrb (mem_wstrb),
-        .mem_rdata (mem_rdata),
+    //para la escritura de los LEDs
+  //despues de un reset se ponen todos los leds en 0, es decir apagados
+    always @(posedge clk_stable or posedge sys_reset) begin
+        if (sys_reset) 
+            leds_reg <= 32'h0;
+         //si se seleccionan los leds se carga el valor de escritura a los leds, para determinar cuales se encienden y cuales permanecen apagados.
+         
+        else if (sel_leds && |mem_wstrb)
+            leds_reg <= mem_wdata;
+    end
 
-        .irq       (32'b0),
-        .eoi       ()
-    );
+   //ROM(blk_mem_gen_0)
+  //se instancia la ROM y se Conectan sus pines al top
+    wire [31:0] rom_data;
+    blk_mem_gen_0 rom (
+      .clka  (clk_stable),		//reloj estable
+        .ena   (1'b1),			// el pin de eneable de la ROM siempre es activo
+      .addra (mem_addr[11:2]), // dirreccion de la ROM
+        .douta (rom_data)		//datos de la ROM
+    );
 
-    // =====================================
-    // Instancia de la UART
-    // =====================================
-    uart #(
-        .DataLength      (8),
-        .BaudRate        (9600),
-        .FifoDepth       (8),
-        .SystemClockFreq (100_000_000),
-        .Parity          (1'b0),
-        .ParityEven      (1'b0),
-        .FlowControl     (1'b0)
-    ) uart_inst (
-        .i_rst_n    (~reset),
-        .i_clk      (CLK100MHZ),
+    // RAM (blk_mem_gen_1)
+  //se crean señales internas para la RAM
+    wire [31:0] ram_rdata;
+  
+  //se asigna 1 a ram_we si se puede escribir de forma segura a la RAM
+    wire ram_we = sel_ram && |mem_wstrb;// señal para permitir escribir de la ram
+  
+  // se instancia la RAM y se conectan sus pines a las señales internas del top
+    blk_mem_gen_1 ram (
+      .clka  (clk_stable),	//reloj estable
+      .ena   (1'b1),		// el pin de eneable de la RAM siempre es activo
+      .wea   (ram_we ? mem_wstrb : 4'b0000),//se asigna 1 a ram_we si se puede escribir de forma segura a la RAM
+        .addra ((mem_addr - 32'h0004_0000) >> 2),//se calcula el valor de la direccion de ram basados en la dirreccion de memoria pedida
+        .dina  (mem_wdata),
+        .douta (ram_rdata)
+    );
 
-        .i_tx_data  (uart_tx_data),
-        .o_rx_data  (uart_rx_data),
-        .i_tx_req   (uart_tx_req),
-        .i_rx_req   (uart_rx_req),
-        .o_rx_rdy   (uart_rx_rdy),
-        .o_tx_rdy   (uart_tx_rdy),
-        .o_tx_empty (uart_tx_empty),
-        .o_rx_error (uart_rx_error),
+ 
+  //selector de memoria 
+    always @(*) begin
+      // valores por defecto
+        mem_ready    = 1'b0;
+        mem_rdata    = 32'h0;
+        uart_tx_data = 8'h0;
+        uart_tx_req  = 1'b0;
+        uart_rx_req  = 1'b0;
+      
+      //si la memoria es valida 
 
-        .i_rx       (uart_rx),
-        .o_tx       (uart_tx),
-        .i_cts      (uart_cts),
-        .o_rts      (uart_rts)
-    );
-
-    // =====================================
-    // Registro de LEDs (si luego conectas LEDs)
-    // =====================================
-    always @(posedge CLK100MHZ or posedge reset) begin
-        if (reset) begin
-            leds_reg <= 32'h0000_0000;
-        end else begin
-            if (sel_leds && |mem_wstrb) begin
-                leds_reg <= mem_wdata;
-            end
-        end
-    end
-
-    // =====================================
-    // ROM
-    // blk_mem_gen_0 debe estar configurada
-    // a 32 bits y 1024 palabras, inicializada
-    // con el .coe
-    // =====================================
-    wire [31:0] rom_data;
-
-    blk_mem_gen_0 rom (
-        .clka   (CLK100MHZ),
-        .ena    (1'b1),
-        .addra  (mem_addr[11:2]),
-        .douta  (rom_data)
-       // .rsta   (reset)
-    );
-
-    // =====================================
-    // RAM
-    // =====================================
-    wire [31:0] ram_rdata;
-    wire        ram_we;
-    wire [31:0] ram_addr;
-
-    assign ram_addr = mem_addr - 32'h0004_0000;
-    assign ram_we   = sel_ram && |mem_wstrb;
-
-    blk_mem_gen_1 ram (
-        .clka  (CLK100MHZ),
-        .ena   (1'b1),
-        .wea   (ram_we),
-        .addra (ram_addr[16:2]),
-        .dina  (mem_wdata),
-        .douta (ram_rdata)
-    );
-
-    // =====================================
-    // Interfaz memory-mapped
-    // =====================================
-    always @(*) begin
-        // valores por defecto
-        mem_ready    = 1'b0;
-        mem_rdata    = 32'h0000_0000;
-
-        uart_tx_data = 8'h00;
-        uart_tx_req  = 1'b0;
-        uart_rx_req  = 1'b0;
-
-        if (mem_valid) begin
-
-            // -------------------------
-            // ROM
-            // -------------------------
-            if (sel_rom) begin
-                mem_ready = 1'b1;
-                mem_rdata = rom_data;
-            end
-
-            // -------------------------
-            // Botón N17 en bit 0
-            // addr = 0x0000_2000
-            // -------------------------
-            else if (sel_sw_btn) begin
-                mem_ready = 1'b1;
-                mem_rdata = {31'b0, ~btn_n17};  //~
-            end
-
-            // -------------------------
-            // LEDs / debug
-            // addr = 0x0000_2004
-            // -------------------------
-            else if (sel_leds) begin
-                mem_ready = 1'b1;
-                if (mem_wstrb == 4'b0000)
-                    mem_rdata = leds_reg;
-            end
-
-            // -------------------------
-            // UART CTRL
-            // bit 0 = tx_rdy
-            // bit 1 = rx_rdy
-            // bit 2 = tx_empty
-            // bit 3 = rx_error
-            // addr = 0x0000_2010
-            // -------------------------
-            else if (sel_uart_ctrl) begin
-                mem_ready = 1'b1;
-                mem_rdata = {
-                    28'b0,
-                    uart_rx_error,
-                    uart_tx_empty,
-                    uart_rx_rdy,
-                    uart_tx_rdy
-                };
-            end
-
-            // -------------------------
-            // UART DATA
-            // Escritura: TX
-            // Lectura: RX
-            // addr = 0x0000_2018
-            // -------------------------
-            else if (sel_uart_data1) begin
-                mem_ready = 1'b1;
-
-                if (|mem_wstrb) begin
-                    uart_tx_data = mem_wdata[7:0];
-                    uart_tx_req  = 1'b1;
-                end else begin
-                    mem_rdata    = {24'h000000, uart_rx_data};
-                    uart_rx_req  = 1'b1;
-                end
-            end
-
-            // -------------------------
-            // UART DATA2 no usado
-            // addr = 0x0000_201C
-            // -------------------------
-            else if (sel_uart_data2) begin
-                mem_ready = 1'b1;
-                mem_rdata = 32'h0000_0000;
-            end
-
-            // -------------------------
-            // RAM
-            // -------------------------
-            else if (sel_ram) begin
-                mem_ready = 1'b1;
-
-                if (|mem_wstrb)
-                    mem_rdata = 32'h0000_0000;
-                else
-                    mem_rdata = ram_rdata;
-            end
-
-            // -------------------------
-            // Dirección no usada
-            // -------------------------
-            else begin
-                mem_ready = 1'b1;
-                mem_rdata = 32'h0000_0000;
-            end
-        end
-    end
+        if (mem_valid) begin
+           // ROM
+            if (sel_rom) begin
+                mem_ready = rom_pending;// se confirma que la memoria esta lista
+                mem_rdata = rom_data;//se lee el dato de la ROM
+            end 
+          // switches y botones, dirreccion 0x0000_2000
+            else if (sel_sw_btn) begin
+                mem_ready = 1'b1;// escritura inmediata
+              mem_rdata = {31'b0, ~btn_n17}; //se lee el valor del boton negado.
+            end
+          //leds, direccion0x0000_2004
+            else if (sel_leds) begin
+                mem_ready = 1'b1;// escritura inmediata
+                mem_rdata = leds_reg;  //se escrive el valor de los leds
+            end
+          //UART
+            else if (sel_uart_ctrl) begin
+                mem_ready = 1'b1;// escritura inmediata
+              mem_rdata = {28'b0, 1'b0, 1'b0, uart_rx_rdy, uart_tx_rdy};// se carga el mensaje que se espera enviar por la UART y las señales de control
+            end
+          //transmicion de UART
+            else if (sel_uart_data1) begin
+                mem_ready = 1'b1;// escritura inmediata
+                if (|mem_wstrb) begin
+                  uart_tx_data = mem_wdata[7:0]; // se cargan los bits del mensaje
+                    uart_tx_req  = 1'b1;
+                  //resepcion de UART 
+                end else begin
+                  mem_rdata    = {24'h0, uart_rx_data}; //se lee lo que se lee por la UART
+                    uart_rx_req  = 1'b1;
+                end
+            end
+          //RAM
+            else if (sel_ram) begin
+                if (|mem_wstrb) begin
+                    mem_ready = 1'b1; // escritura inmediata
+                end else begin
+                    mem_ready = ram_pending; // lectura con latencia
+                    mem_rdata = ram_rdata;  //lee los datos de la ram
+                end
+            end
+          //si se selecciona una direccion de memoria distinta a las especificadas (fallback para las direcciones no mapeadas)
+            else begin
+                mem_ready = 1'b1; 
+            end
+        end
+    end
 
 endmodule
