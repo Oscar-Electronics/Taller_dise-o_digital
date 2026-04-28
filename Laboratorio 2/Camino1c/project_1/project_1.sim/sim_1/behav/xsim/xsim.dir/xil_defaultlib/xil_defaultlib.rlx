@@ -1,0 +1,17 @@
+0.7
+2020.2
+Nov  8 2024
+22:36:57
+C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.gen/sources_1/ip/blk_mem_gen_0/sim/blk_mem_gen_0.v,1777360660,verilog,,C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.gen/sources_1/ip/clk_wiz_0/clk_wiz_0_sim_netlist.v,,blk_mem_gen_0,,uvm,,,,,,
+C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.gen/sources_1/ip/clk_wiz_0/clk_wiz_0_sim_netlist.v,1777356986,verilog,,C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/imports/scr/riscv/picorv32.v,,clk_wiz_0;clk_wiz_0_clk_wiz,,uvm,,,,,,
+C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.sim/sim_1/behav/xsim/glbl.v,1724786425,verilog,,,,glbl,,uvm,,,,,,
+C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sim_1/new/tb_top.v,1777359853,verilog,,,,tb_top,,uvm,,,,,,
+C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/imports/scr/riscv/picorv32.v,1776348487,verilog,,C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/imports/scr/top/top_microprocesador.v,,picorv32;picorv32_axi;picorv32_axi_adapter;picorv32_pcpi_div;picorv32_pcpi_fast_mul;picorv32_pcpi_mul;picorv32_regs;picorv32_wb,,uvm,,,,,,
+C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/imports/scr/top/top_microprocesador.v,1777359065,verilog,,,,top_microprocesador,,uvm,,,,,,
+C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/imports/scr/uart/fifo.sv,1776348487,systemVerilog,,C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/imports/scr/uart/fifo_ctrl.sv,,fifo,,uvm,,,,,,
+C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/imports/scr/uart/fifo_ctrl.sv,1776348487,systemVerilog,,C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/imports/scr/uart/fifo_mem.sv,,fifo_ctrl,,uvm,,,,,,
+C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/imports/scr/uart/fifo_mem.sv,1776348487,systemVerilog,,C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/imports/scr/uart/uart.sv,,fifo_mem,,uvm,,,,,,
+C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/imports/scr/uart/uart.sv,1776348487,systemVerilog,,C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/imports/scr/uart/uart_rx.sv,,uart,,uvm,,,,,,
+C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/imports/scr/uart/uart_rx.sv,1776348487,systemVerilog,,C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/imports/scr/uart/uart_tx.sv,,uart_rx,,uvm,,,,,,
+C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/imports/scr/uart/uart_tx.sv,1776348487,systemVerilog,,,,uart_tx,,uvm,,,,,,
+C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/new/uart_axi_lite_wrapper.v,1777327159,verilog,,,,uart_axi_lite_wrapper,,uvm,,,,,,

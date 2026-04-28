@@ -1,0 +1,22 @@
+Time resolution is 1 ps
+ Block Memory Generator module loading initial data...
+ Block Memory Generator data initialization complete.
+Block Memory Generator module tb_top.uut.rom.inst.native_mem_module.blk_mem_gen_v8_4_9_inst is using a behavioral model for simulation which will not precisely model memory collision behavior.
+-------------------------------------------------------------------------------------------
+Tiempo | valid ready addr        instr wstrb rdata       rom_data    tx_req tx_data
+-------------------------------------------------------------------------------------------
+WARNING: 0ns : none of the conditions were true for unique case from File:C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/imports/scr/uart/uart_tx.sv:51
+WARNING: 0ns : none of the conditions were true for unique case from File:C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/imports/scr/uart/uart_tx.sv:84
+WARNING: 0ns : none of the conditions were true for unique case from File:C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/imports/scr/uart/uart_rx.sv:69
+WARNING: 0ns : none of the conditions were true for unique case from File:C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/imports/scr/uart/uart_rx.sv:69
+                   0 |   x     0   xxxxxxxx   x     xxxx   00000000   00000000   0      00
+                5000 |   0     0   xxxxxxxx   x     xxxx   00000000   00000000   0      00
+                5000 |   0     0   xxxxxxxx   x     xxxx   00000000   00002137   0      00
+              365000 |   1     1   00000000   1     0000   00000000   00002137   0      00
+              365000 |   1     1   00000000   1     0000   00000000   xxxxxxxx   0      00
+              375000 |   0     0   00000000   1     0000   00000000   xxxxxxxx   0      00
+              385000 |   0     0   00000000   1     0000   00000000   00002137   0      00
+              395000 |   1     1   00000004   1     0000   00000000   00002137   0      00
+              405000 |   0     0   00000004   1     0000   00000000   00002137   0      00
+              415000 |   0     0   00000004   1     0000   00000000   04100193   0      00
+$finish called at time : 20100 ns : File "C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sim_1/new/tb_top.v" Line 66
