@@ -23,7 +23,7 @@ module tb_top;
     );
 
     // =========================
-    // "Taps" a señales internas
+    // Taps internos
     // =========================
     wire        mem_valid   = uut.mem_valid;
     wire        mem_ready   = uut.mem_ready;
@@ -33,7 +33,6 @@ module tb_top;
     wire [31:0] mem_rdata   = uut.mem_rdata;
 
     wire [31:0] rom_data    = uut.rom_data;
-    wire [31:0] ram_rdata   = uut.ram_rdata;
 
     wire        uart_tx_req  = uut.uart_tx_req;
     wire [7:0]  uart_tx_data = uut.uart_tx_data;
@@ -52,40 +51,82 @@ module tb_top;
     initial begin
         reset_n = 0;
         btn_n17 = 1;
-        uart_rx = 1; // idle
+        uart_rx = 1;
 
         #100;
         reset_n = 1;
 
-        // ⚠️ Bypass del clock wizard
+        // Bypass clock wizard
         force uut.locked = 1'b1;
 
-        // correr suficiente tiempo
-        #20000;
+        // tiempo largo para programa complejo
+        #200000;
 
+        $display("\n⛔ FIN DE SIMULACIÓN");
         $finish;
     end
 
     // =========================
-    // Monitor detallado
+    // MONITOR GENERAL
     // =========================
     initial begin
-        $display("-------------------------------------------------------------------------------------------");
-        $display("Tiempo | valid ready addr        instr wstrb rdata       rom_data    tx_req tx_data");
-        $display("-------------------------------------------------------------------------------------------");
-
-        $monitor("%t |   %b     %b   %h   %b     %b   %h   %h   %b      %h",
+        $display("Tiempo | addr        | valid ready | wstrb | tx_req | tx_data");
+        $monitor("%t | %h |   %b     %b   |  %b   |   %b    |   %h",
             $time,
+            mem_addr,
             mem_valid,
             mem_ready,
-            mem_addr,
-            mem_instr,
             mem_wstrb,
-            mem_rdata,
-            rom_data,
             uart_tx_req,
             uart_tx_data
         );
+    end
+
+    // =========================
+    // 🎯 DETECTOR DE UART (LO IMPORTANTE)
+    // =========================
+    always @(posedge CLK100MHZ) begin
+        if (uart_tx_req) begin
+            $display("📡 UART TX → '%c' (0x%h) en tiempo %t",
+                uart_tx_data,
+                uart_tx_data,
+                $time
+            );
+        end
+    end
+
+    // =========================
+    // 🎯 DETECTOR DE ACCESO A UART
+    // =========================
+    always @(posedge CLK100MHZ) begin
+        if (mem_valid && mem_addr == 32'h00002018) begin
+            $display("🎯 ACCESO A UART DATA (0x2018) en %t | wstrb=%b",
+                $time, mem_wstrb);
+        end
+    end
+
+    // =========================
+    // 🚨 DETECTOR DE LOOP SOSPECHOSO
+    // =========================
+    reg [31:0] last_addr;
+    integer same_count;
+
+    initial begin
+        last_addr = 0;
+        same_count = 0;
+    end
+
+    always @(posedge CLK100MHZ) begin
+        if (mem_addr == last_addr)
+            same_count = same_count + 1;
+        else
+            same_count = 0;
+
+        last_addr = mem_addr;
+
+        if (same_count == 50) begin
+            $display("⚠️ POSIBLE LOOP en addr = %h en tiempo %t", mem_addr, $time);
+        end
     end
 
 endmodule

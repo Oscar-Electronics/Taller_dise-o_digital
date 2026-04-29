@@ -1,7 +1,7 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
 ---------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2024.2 (win64) Build 5239630 Fri Nov 08 22:35:27 MST 2024
-| Date         : Tue Apr 28 02:35:22 2026
+| Date         : Tue Apr 28 23:00:48 2026
 | Host         : DESKTOP-HJBI5HF running 64-bit major release  (build 9200)
 | Command      : report_control_sets -verbose -file top_microprocesador_control_sets_placed.rpt
 | Design       : top_microprocesador
@@ -90,9 +90,9 @@ Table of Contents
 |  clk_inst/inst/clk_out1 | cpu/is_lui_auipc_jal_jalr_addi_add_sub0             | cpu/sys_reset                            |                8 |             23 |         2.88 |
 |  clk_inst/inst/clk_out1 | cpu/is_lui_auipc_jal_jalr_addi_add_sub0             |                                          |               10 |             30 |         3.00 |
 |  clk_inst/inst/clk_out1 | cpu/mem_addr[31]_i_1_n_0                            |                                          |               11 |             30 |         2.73 |
-|  clk_inst/inst/clk_out1 | cpu/mem_wdata[31]_i_1_n_0                           |                                          |               13 |             32 |         2.46 |
 |  clk_inst/inst/clk_out1 | cpu/reg_op1[31]_i_1_n_0                             |                                          |               19 |             32 |         1.68 |
 |  clk_inst/inst/clk_out1 | cpu/reg_op2[31]_i_1_n_0                             |                                          |               11 |             32 |         2.91 |
+|  clk_inst/inst/clk_out1 | cpu/mem_wdata[31]_i_1_n_0                           |                                          |               13 |             32 |         2.46 |
 |  clk_inst/inst/clk_out1 | cpu/mem_wstrb_reg[1]_1[0]                           | cpu/sys_reset                            |               15 |             32 |         2.13 |
 |  clk_inst/inst/clk_out1 | cpu/instr_jal_i_1_n_0                               |                                          |               12 |             43 |         3.58 |
 |  clk_inst/inst/clk_out1 | cpu/reg_next_pc                                     | cpu/sys_reset                            |               22 |             62 |         2.82 |

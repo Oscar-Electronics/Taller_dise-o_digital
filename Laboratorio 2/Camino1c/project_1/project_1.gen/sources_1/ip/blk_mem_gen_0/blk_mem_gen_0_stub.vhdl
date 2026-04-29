@@ -2,7 +2,7 @@
 -- Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2024.2 (win64) Build 5239630 Fri Nov 08 22:35:27 MST 2024
--- Date        : Tue Apr 28 01:19:17 2026
+-- Date        : Tue Apr 28 22:57:44 2026
 -- Host        : DESKTOP-HJBI5HF running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode synth_stub
 --               c:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.gen/sources_1/ip/blk_mem_gen_0/blk_mem_gen_0_stub.vhdl

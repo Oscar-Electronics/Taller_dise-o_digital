@@ -57,6 +57,7 @@ if {$::dispatch::connected} {
 
 OPTRACE "synth_1" START { ROLLUP_AUTO }
 set_param chipscope.maxJobs 1
+set_msg_config -id {Common 17-41} -limit 10000000
 OPTRACE "Creating in-memory project" START { }
 create_project -in_memory -part xc7a100tcsg324-1
 
@@ -74,7 +75,7 @@ set_property ip_output_repo c:/Users/raque/Documents/Proyectos_Taller_Digitales/
 set_property ip_cache_permissions {read write} [current_project]
 OPTRACE "Creating in-memory project" END { }
 OPTRACE "Adding files" START { }
-add_files C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/program_led.coe
+add_files c:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/calculadora.coe
 read_verilog -library xil_defaultlib -sv {
   C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/imports/scr/uart/fifo.sv
   C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/imports/scr/uart/fifo_ctrl.sv
@@ -87,9 +88,6 @@ read_verilog -library xil_defaultlib {
   C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/imports/scr/riscv/picorv32.v
   C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/imports/top/top_microprocesador.v
 }
-read_ip -quiet C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/ip/blk_mem_gen_0/blk_mem_gen_0.xci
-set_property used_in_implementation false [get_files -all c:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.gen/sources_1/ip/blk_mem_gen_0/blk_mem_gen_0_ooc.xdc]
-
 read_ip -quiet C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/ip/blk_mem_gen_1/blk_mem_gen_1.xci
 set_property used_in_implementation false [get_files -all c:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.gen/sources_1/ip/blk_mem_gen_1/blk_mem_gen_1_ooc.xdc]
 
@@ -97,6 +95,9 @@ read_ip -quiet C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/pro
 set_property used_in_implementation false [get_files -all c:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.gen/sources_1/ip/clk_wiz_0/clk_wiz_0_board.xdc]
 set_property used_in_implementation false [get_files -all c:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.gen/sources_1/ip/clk_wiz_0/clk_wiz_0.xdc]
 set_property used_in_implementation false [get_files -all c:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.gen/sources_1/ip/clk_wiz_0/clk_wiz_0_ooc.xdc]
+
+read_ip -quiet C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/ip/blk_mem_gen_0/blk_mem_gen_0.xci
+set_property used_in_implementation false [get_files -all c:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.gen/sources_1/ip/blk_mem_gen_0/blk_mem_gen_0_ooc.xdc]
 
 OPTRACE "Adding files" END { }
 # Mark all dcp files as not used in implementation to prevent them from being

@@ -97,6 +97,7 @@ proc step_failed { step } {
 OPTRACE "impl_1" END { }
 }
 
+set_msg_config -id {Common 17-41} -limit 10000000
 
 OPTRACE "impl_1" START { ROLLUP_1 }
 OPTRACE "Phase: Init Design" START { ROLLUP_AUTO }
@@ -121,9 +122,9 @@ OPTRACE "set parameters" START { }
 OPTRACE "set parameters" END { }
 OPTRACE "add files" START { }
   add_files -quiet C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.runs/synth_1/top_microprocesador.dcp
-  read_ip -quiet C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/ip/blk_mem_gen_0/blk_mem_gen_0.xci
   read_ip -quiet C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/ip/blk_mem_gen_1/blk_mem_gen_1.xci
   read_ip -quiet C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/ip/clk_wiz_0/clk_wiz_0.xci
+  read_ip -quiet C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/sources_1/ip/blk_mem_gen_0/blk_mem_gen_0.xci
 OPTRACE "read constraints: implementation" START { }
   read_xdc C:/Users/raque/Documents/Proyectos_Taller_Digitales/project_1/project_1.srcs/constrs_1/new/ConstrainsM.xdc
 OPTRACE "read constraints: implementation" END { }
