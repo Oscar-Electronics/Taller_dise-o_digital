@@ -5,18 +5,17 @@ module top_microprocesador (
     input  wire reset_n,
     input  wire btn_n17,
     input  wire uart_rx,
-    output wire uart_tx
+   output wire uart_tx
 );
 
-    // =========================
-    // Clocking
-    // =========================
+
+  //clk
     wire clk_stable;
     wire locked;
     wire sys_reset;
 
     clk_wiz_0 clk_inst (
-        .clk_out1(clk_stable),
+      	  .clk_out1(clk_stable),
         .resetn(reset_n),
         .locked(locked),
         .clk_in1(CLK100MHZ)
@@ -24,9 +23,7 @@ module top_microprocesador (
 
     assign sys_reset = ~locked;
 
-    // =========================
-    // PicoRV32 signals
-    // =========================
+    //señales pocorv32
     wire        mem_valid;
     wire        mem_instr;
     reg         mem_ready;
@@ -36,9 +33,7 @@ module top_microprocesador (
     reg  [31:0] mem_rdata;
     wire        trap;
 
-    // =========================
-    // UART signals
-    // =========================
+   //señales  UART
     reg  [7:0] uart_tx_data;
     reg        uart_tx_req;
     reg        uart_rx_req;
@@ -46,14 +41,10 @@ module top_microprocesador (
     wire       uart_rx_rdy;
     wire       uart_tx_rdy;
 
-    // =========================
-    // LEDs
-    // =========================
+   //LEDS
     reg [31:0] leds_reg;
 
-    // =========================
-    // Memory map
-    // =========================
+   //mapa de memoria
     wire sel_rom       = mem_valid && (mem_addr >= 32'h0000_0000) && (mem_addr <= 32'h0000_07FC);
     wire sel_sw_btn    = mem_valid && (mem_addr == 32'h0000_2000);
     wire sel_leds      = mem_valid && (mem_addr == 32'h0000_2004);
@@ -61,28 +52,24 @@ module top_microprocesador (
     wire sel_uart_data = mem_valid && (mem_addr == 32'h0000_2018);
     wire sel_ram       = mem_valid && (mem_addr >= 32'h0004_0000) && (mem_addr <= 32'h0005_FFFC);
 
-    // =========================
-    // Pipeline (clave para BRAM)
-    // =========================
+   
     reg [31:0] mem_addr_q;
     reg        rom_sel_q;
     reg        ram_sel_q;
 
     always @(posedge clk_stable or posedge sys_reset) begin
         if (sys_reset) begin
-            mem_addr_q <= 32'h0;
+          	  mem_addr_q <= 32'h0;
             rom_sel_q  <= 1'b0;
             ram_sel_q  <= 1'b0;
         end else begin
-            mem_addr_q <= mem_addr;
+          	  mem_addr_q <= mem_addr;
             rom_sel_q  <= sel_rom;
             ram_sel_q  <= sel_ram;
-        end
+    end
     end
 
-    // =========================
-    // CPU
-    // =========================
+//cpu
     picorv32 cpu (
         .clk       (clk_stable),
         .resetn    (~sys_reset),
@@ -98,9 +85,7 @@ module top_microprocesador (
         .eoi       ()
     );
 
-    // =========================
-    // UART
-    // =========================
+   //uart
     uart #(
         .SystemClockFreq (100_000_000),
         .BaudRate        (9600)
@@ -115,23 +100,19 @@ module top_microprocesador (
         .o_tx_rdy   (uart_tx_rdy),
         .i_rx       (uart_rx),
         .o_tx       (uart_tx),
-        .i_cts      (1'b0),
+         .i_cts      (1'b0),
         .o_rts      ()
     );
 
-    // =========================
-    // LEDs
-    // =========================
+  //leds
     always @(posedge clk_stable or posedge sys_reset) begin
         if (sys_reset)
             leds_reg <= 32'h0;
-        else if (sel_leds && |mem_wstrb)
+  	      else if (sel_leds && |mem_wstrb)
             leds_reg <= mem_wdata;
-    end
+   end
 
-    // =========================
-    // ROM
-    // =========================
+   //rom
     wire [31:0] rom_data;
 
     blk_mem_gen_0 rom (
@@ -141,9 +122,7 @@ module top_microprocesador (
         .douta (rom_data)
     );
 
-    // =========================
-    // RAM
-    // =========================
+   /ram
     wire [31:0] ram_rdata;
     wire [3:0]  ram_we;
     wire [31:0] ram_addr_word_q;
@@ -160,9 +139,7 @@ module top_microprocesador (
         .douta (ram_rdata)
     );
 
-    // =========================
-    // Memory interface
-    // =========================
+ //controlador de memoria
     always @(*) begin
         mem_ready    = 1'b0;
         mem_rdata    = 32'h0000_0000;
@@ -172,50 +149,50 @@ module top_microprocesador (
 
         if (mem_valid) begin
 
-            // ROM (alineada)
+
             if (rom_sel_q) begin
                 mem_ready = 1'b1;
                 mem_rdata = rom_data;
-            end
-
-            // RAM (alineada)
+      	      end
+	
+            
             else if (ram_sel_q) begin
                 mem_ready = 1'b1;
                 mem_rdata = ram_rdata;
             end
 
-            // Botón
+            
             else if (sel_sw_btn) begin
                 mem_ready = 1'b1;
                 mem_rdata = {31'b0, ~btn_n17};
             end
 
-            // LEDs
+            
             else if (sel_leds) begin
                 mem_ready = 1'b1;
                 mem_rdata = leds_reg;
             end
 
-            // UART CTRL
+            
             else if (sel_uart_ctrl) begin
                 mem_ready = 1'b1;
                 mem_rdata = {28'b0, 2'b00, uart_rx_rdy, uart_tx_rdy};
             end
 
-            // UART DATA
+            
             else if (sel_uart_data) begin
                 mem_ready = 1'b1;
 
                 if (|mem_wstrb) begin
                     uart_tx_data = mem_wdata[7:0];
-                    uart_tx_req  = 1'b1;
+                   uart_tx_req  = 1'b1;
                 end else begin
                     mem_rdata   = {24'h0, uart_rx_data};
                     uart_rx_req = 1'b1;
                 end
             end
 
-            // Default
+            // defult
             else begin
                 mem_ready = 1'b1;
                 mem_rdata = 32'h0000_0000;

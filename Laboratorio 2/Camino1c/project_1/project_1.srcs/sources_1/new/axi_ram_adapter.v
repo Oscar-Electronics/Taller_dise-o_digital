@@ -4,7 +4,7 @@ module axi_ram_adapter #(
     input  wire        s_aclk,
     input  wire        s_aresetn,
 
-    // AXI4-Lite slave
+    //señales de esclavo
     input  wire        s_axi_awvalid,
     input  wire [31:0] s_axi_awaddr,
     output wire        s_axi_awready,
@@ -23,7 +23,7 @@ module axi_ram_adapter #(
     output wire [1:0]  s_axi_rresp,
     input  wire        s_axi_rready,
 
-    // BRAM interface (single port)
+    // interfas BRAM
     output wire [ADDR_WIDTH-1:0] bram_addr,
     output wire [3:0]  bram_we,
     output wire [31:0] bram_wdata,
@@ -32,7 +32,7 @@ module axi_ram_adapter #(
 
     wire [ADDR_WIDTH-1:0] addr_word = s_axi_araddr[ADDR_WIDTH+1:2];
 
-    // Canal de lectura
+    //leer
     reg read_valid;
     reg [31:0] read_data;
     assign s_axi_arready = s_axi_arvalid & ~read_valid;
@@ -54,7 +54,7 @@ module axi_ram_adapter #(
         end
     end
 
-    // Canal de escritura
+    // escribir
     reg write_ready;
     reg write_done;
     assign s_axi_awready = s_axi_awvalid & ~write_ready;

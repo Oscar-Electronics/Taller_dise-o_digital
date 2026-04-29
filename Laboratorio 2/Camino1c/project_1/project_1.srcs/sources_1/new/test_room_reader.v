@@ -1,7 +1,7 @@
 module test_rom_reader (
     input  wire       clk,
     input  wire       rst_n,
-    // Interfaz de memoria (igual que la del picoRV32)
+    // interfas de mem
     output reg        mem_valid,
     output reg        mem_instr,
     input  wire       mem_ready,
@@ -9,8 +9,7 @@ module test_rom_reader (
     output reg [31:0] mem_wdata,
     output reg [ 3:0] mem_wstrb,
     input  wire [31:0] mem_rdata,
-    // Para escribir en LEDs
-    output reg [31:0] leds_out
+    output reg [31:0] leds_out // salida de leds
 );
     reg [1:0] state;
     reg [31:0] read_data;
@@ -25,24 +24,24 @@ module test_rom_reader (
             mem_wstrb <= 4'b0000;
             leds_out <= 0;
         end else begin
+//maquina de estados para  leer la rom
             case (state)
-                2'b00: begin // Esperar a que el reset se libere
+                2'b00: begin 
                     if (rst_n) begin
-                        // Iniciar lectura en dirección 0
-                        mem_addr <= 32'h0000_0000;
+                        mem_addr <= 32'h0000_0000; // empieza en dirreccion 0
                         mem_valid <= 1'b1;
                         mem_instr <= 1'b1;
                         state <= 2'b01;
                     end
                 end
-                2'b01: begin // Esperar que la memoria esté lista
-                    if (mem_ready) begin
+                2'b01: begin
+                    if (mem_ready) begin //espera a que la memoria este lista
                         read_data <= mem_rdata;
                         mem_valid <= 1'b0;
                         state <= 2'b10;
                     end
                 end
-                2'b10: begin // Escribir el dato leído en los LEDs (dirección 0x2004)
+                2'b10: begin 
                     mem_addr <= 32'h0000_2004;
                     mem_wdata <= read_data;
                     mem_wstrb <= 4'b1111;
@@ -50,11 +49,11 @@ module test_rom_reader (
                     mem_instr <= 1'b0;
                     state <= 2'b11;
                 end
-                2'b11: begin // Esperar respuesta de escritura
-                    if (mem_ready) begin
-                        mem_valid <= 1'b0;
-                        leds_out <= read_data; // También mostrar en LEDs internos
-                        state <= 2'b00;       // Terminar, podría reiniciar
+                2'b11: begin 
+                    if (mem_ready) begin // si la memoria esta lista
+                        mem_valid <= 1'b0; 
+                        leds_out <= read_data; // los leds conservan su valor pasado
+                        state <= 2'b00;      //vuelve al inicio
                     end
                 end
             endcase

@@ -1,66 +1,59 @@
-// uart_axi_lite_wrapper.v (corregido)
+// wrapper de axi para la uart
 module uart_axi_lite_wrapper (
     input  wire        s_aclk,
     input  wire        s_aresetn,
 
-    // Write address channel
+    // escribir dirreccion
     input  wire [31:0] s_axi_awaddr,
     input  wire        s_axi_awvalid,
     output reg         s_axi_awready,
-
-    // Write data channel
+    // escribir data
     input  wire [31:0] s_axi_wdata,
     input  wire [3:0]  s_axi_wstrb,
     input  wire        s_axi_wvalid,
     output reg         s_axi_wready,
 
-    // Write response channel
+    // escribir respuesta
     output reg  [1:0]  s_axi_bresp,
     output reg         s_axi_bvalid,
     input  wire        s_axi_bready,
 
-    // Read address channel
+    //leer dirreccion
     input  wire [31:0] s_axi_araddr,
     input  wire        s_axi_arvalid,
     output reg         s_axi_arready,
 
-    // Read data channel
+    // Rleer datos
     output reg  [31:0] s_axi_rdata,
     output reg  [1:0]  s_axi_rresp,
     output reg         s_axi_rvalid,
     input  wire        s_axi_rready,
 
-    // UART pins
+    // señales de la UAT
     input  wire        uart_rx,
     output wire        uart_tx
 );
-
     localparam ADDR_CTRL  = 8'h10;   // 0x2010
     localparam ADDR_DATA1 = 8'h18;   // 0x2018 (TX)
     localparam ADDR_DATA2 = 8'h1C;   // 0x201C (RX)
-
-    // Registros internos
     reg [31:0] ctrl_reg;
     reg [31:0] tx_data_reg;
     reg [31:0] rx_data_reg;
-
-    // Señales para el módulo UART
     reg  [7:0] uart_tx_byte;
     reg        uart_tx_start;
-    wire       uart_tx_busy;   // asumiendo que o_tx_rdy = 1 cuando está listo
-    wire [7:0] uart_rx_byte;   // ¡esto debe ser wire, no reg!
-    wire       uart_rx_valid;
-
-    // Máquinas de estado
+   	 wire       uart_tx_busy;   // asumiendo que o_tx_rdy = 1 cuando está listo
+ 	   wire [7:0] uart_rx_byte;   // ¡esto debe ser wire, no reg!
+  	  wire       uart_rx_valid;
+s
     reg [1:0]  write_state;
     reg [31:0] awaddr_reg;
     reg [1:0]  read_state;
     reg [31:0] araddr_reg;
 
-    // Instanciación del UART (ajusta según los nombres reales de tus puertos)
+instanciar al UART
     uart #(
         .SystemClockFreq(100_000_000),
-        .BaudRate(9600)
+        .BaudRate(9600) // baudios
     ) uart_inst (
         .i_rst_n   (s_aresetn),
         .i_clk     (s_aclk),
@@ -78,9 +71,7 @@ module uart_axi_lite_wrapper (
         .o_rts     ()
     );
 
-    // --------------------------------------------------------------
-    // Canal de escritura AXI (máquina de estados)
-    // --------------------------------------------------------------
+   maquina de estados para controlar el axi
     always @(posedge s_aclk or negedge s_aresetn) begin
         if (!s_aresetn) begin
             write_state   <= 2'b00;
@@ -96,7 +87,7 @@ module uart_axi_lite_wrapper (
         end else begin
             s_axi_awready <= 1'b0;
             s_axi_wready  <= 1'b0;
-            uart_tx_start <= 1'b0;   // pulso de un ciclo
+            uart_tx_start <= 1'b0;   
 
             case (write_state)
                 2'b00: begin
@@ -130,7 +121,7 @@ module uart_axi_lite_wrapper (
                 default: write_state <= 2'b00;
             endcase
 
-            // Limpiar bit send cuando la transmisión termina
+            /
             if (ctrl_reg[0] && ~uart_tx_busy) begin
                 ctrl_reg[0] <= 1'b0;
             end
@@ -157,9 +148,7 @@ module uart_axi_lite_wrapper (
         endcase
     endtask
 
-    // --------------------------------------------------------------
-    // Canal de lectura AXI
-    // --------------------------------------------------------------
+    //leer por axi
     always @(posedge s_aclk or negedge s_aresetn) begin
         if (!s_aresetn) begin
             read_state   <= 2'b00;

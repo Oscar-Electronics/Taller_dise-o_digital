@@ -2,7 +2,7 @@ module axi_gpio_simple (
     input  wire        s_aclk,
     input  wire        s_aresetn,
 
-    // AXI4-Lite slave
+    // señales del esclavo
     input  wire        s_axi_awvalid,
     input  wire [31:0] s_axi_awaddr,
     output wire        s_axi_awready,
@@ -21,7 +21,7 @@ module axi_gpio_simple (
     output wire [1:0]  s_axi_rresp,
     input  wire        s_axi_rready,
 
-    // GPIO externos
+    // sañales externas
     input  wire [31:0] gpio_i,
     output reg  [31:0] gpio_o
 );
@@ -30,9 +30,7 @@ module axi_gpio_simple (
     wire is_read_addr  = (s_axi_araddr[7:0] == 8'h00);  // 0x2000
     wire is_write_addr = (s_axi_awaddr[7:0] == 8'h04);  // 0x2004
 
-    // --------------------------------------------------------------
-    // Canal de lectura
-    // --------------------------------------------------------------
+    //lectura
     reg read_valid;
     reg [31:0] read_data;
     assign s_axi_arready = s_axi_arvalid & ~read_valid;
@@ -57,9 +55,7 @@ module axi_gpio_simple (
         end
     end
 
-    // --------------------------------------------------------------
-    // Canal de escritura (solo para la dirección de LEDs)
-    // --------------------------------------------------------------
+    //salida leds
     reg write_ready;
     reg write_done;
     assign s_axi_awready = s_axi_awvalid & ~write_ready;

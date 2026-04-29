@@ -1,7 +1,7 @@
 module axi_gpio_simple (
     input  wire        s_aclk,
     input  wire        s_aresetn,
-    // AXI4-Lite slave
+    //señales de esclavo
     input  wire        s_axi_awvalid,
     input  wire [31:0] s_axi_awaddr,
     output wire        s_axi_awready,
@@ -19,16 +19,16 @@ module axi_gpio_simple (
     output wire [31:0] s_axi_rdata,
     output wire [1:0]  s_axi_rresp,
     input  wire        s_axi_rready,
-    // External I/O
+    // salidas externas
     input  wire [31:0] gpio_i,
     output reg  [31:0] gpio_o
 );
 
-    // Decodificación de offsets: lectura siempre desde 0x2000, escritura a 0x2004
+    // decodificar y offset
     wire is_read_addr  = (s_axi_araddr[7:0] == 8'h00);
     wire is_write_addr = (s_axi_awaddr[7:0] == 8'h04);
 
-    // Canal de lectura
+    // lectura
     reg  read_valid;
     reg  [31:0] read_data;
 
@@ -54,7 +54,7 @@ module axi_gpio_simple (
         end
     end
 
-    // Canal de escritura
+    // escribir
     reg write_ready;
     reg write_done;
 
