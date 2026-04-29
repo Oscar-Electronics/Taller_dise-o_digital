@@ -38,7 +38,7 @@ El sistema está compuesto por los siguientes módulos principales:
 
 ## Diagrama del sistema
 
-![Arquitectura del sistema]<img width="1536" height="1024" alt="Microprocesador" src="https://github.com/user-attachments/assets/f09c2d86-d8f6-4ece-b68a-5f97c7cfd21b" />
+<img width="1536" height="1024" alt="Microprocesador" src="https://github.com/user-attachments/assets/f09c2d86-d8f6-4ece-b68a-5f97c7cfd21b" />
 
 
 ---
@@ -98,8 +98,6 @@ El sistema fue verificado mediante:
 - Toolchain RISC-V  
 
 ---
-
-## Estructura del proyecto
 
 ## Estructura del proyecto
 
