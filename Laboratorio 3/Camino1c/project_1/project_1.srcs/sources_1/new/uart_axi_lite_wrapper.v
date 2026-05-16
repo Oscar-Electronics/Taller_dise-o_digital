@@ -44,13 +44,13 @@ module uart_axi_lite_wrapper (
    	 wire       uart_tx_busy;   // asumiendo que o_tx_rdy = 1 cuando está listo
  	   wire [7:0] uart_rx_byte;   // ¡esto debe ser wire, no reg!
   	  wire       uart_rx_valid;
-s
+
     reg [1:0]  write_state;
     reg [31:0] awaddr_reg;
     reg [1:0]  read_state;
     reg [31:0] araddr_reg;
 
-instanciar al UART
+//instanciar al UART
     uart #(
         .SystemClockFreq(100_000_000),
         .BaudRate(9600) // baudios
@@ -71,7 +71,7 @@ instanciar al UART
         .o_rts     ()
     );
 
-   maquina de estados para controlar el axi
+ //  maquina de estados para controlar el axi
     always @(posedge s_aclk or negedge s_aresetn) begin
         if (!s_aresetn) begin
             write_state   <= 2'b00;
@@ -121,7 +121,7 @@ instanciar al UART
                 default: write_state <= 2'b00;
             endcase
 
-            /
+            
             if (ctrl_reg[0] && ~uart_tx_busy) begin
                 ctrl_reg[0] <= 1'b0;
             end

@@ -48,3 +48,9 @@ set_property -dict { PACKAGE_PIN V11   IOSTANDARD LVCMOS33 } [get_ports { leds[1
 set_property -dict { PACKAGE_PIN C4    IOSTANDARD LVCMOS33 } [get_ports { uart_rx }]
 # UART - salida tx (desde FPGA a PC)
 set_property -dict { PACKAGE_PIN D4    IOSTANDARD LVCMOS33 } [get_ports { uart_tx }]
+
+# SPI acelerométro
+set_property -dict { PACKAGE_PIN F14 IOSTANDARD LVCMOS33 } [get_ports { accel_mosi }]
+set_property -dict { PACKAGE_PIN E15 IOSTANDARD LVCMOS33 } [get_ports { accel_miso }]
+set_property -dict { PACKAGE_PIN F15 IOSTANDARD LVCMOS33 } [get_ports { accel_sclk }]
+set_property -dict { PACKAGE_PIN D15 IOSTANDARD LVCMOS33 } [get_ports { accel_cs_n }]

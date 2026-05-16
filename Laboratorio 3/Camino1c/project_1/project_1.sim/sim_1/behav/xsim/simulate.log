@@ -1,0 +1,15 @@
+Time resolution is 1 ps
+Iniciando lectura SPI del acelerometro...
+CTRL    = 00000002
+DATA_XY = 05de0011
+DATA_Z  = 0000002a
+X = 0011
+Y = 05de
+Z = 002a
+Error: Error en X. Esperado 0123, recibido 0011
+Time: 2064295 ns  Iteration: 0  Process: /tb_spi_adxl362/Initial161_6  Scope: tb_spi_adxl362  File: C:/Users/anshr/Laboratorio 3/Camino1c/project_1/project_1.srcs/sim_1/new/tb_spi_adxl362.sv Line: 200
+Error: Error en Y. Esperado 0ABC, recibido 05de
+Time: 2064295 ns  Iteration: 0  Process: /tb_spi_adxl362/Initial161_6  Scope: tb_spi_adxl362  File: C:/Users/anshr/Laboratorio 3/Camino1c/project_1/project_1.srcs/sim_1/new/tb_spi_adxl362.sv Line: 203
+Error: Error en Z. Esperado 0055, recibido 002a
+Time: 2064295 ns  Iteration: 0  Process: /tb_spi_adxl362/Initial161_6  Scope: tb_spi_adxl362  File: C:/Users/anshr/Laboratorio 3/Camino1c/project_1/project_1.srcs/sim_1/new/tb_spi_adxl362.sv Line: 206
+TEST FAILED: los datos recibidos no coinciden.
