@@ -1,9 +1,6 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
 
-//////////////////////////////////////////////////////////////////////////////////
-`timescale 1ns / 1ps
-
 module tb_spi_adxl362;
 
     logic clk;
@@ -60,51 +57,51 @@ module tb_spi_adxl362;
         miso_bytes[0] = 8'h00;
         miso_bytes[1] = 8'h00;
 
-        // X = 0x0123
-        miso_bytes[2] = 8'h23;
-        miso_bytes[3] = 8'h01;
+      miso_bytes[0] = 8'h00;
+      miso_bytes[1] = 8'h00;
 
-        // Y = 0x0ABC
+        miso_bytes[2] = 8'h23; // X LSB
+        miso_bytes[3] = 8'h01; // X MSB
+        
+        
         miso_bytes[4] = 8'hBC;
-        miso_bytes[5] = 8'h0A;
-
-        // Z = 0x0055
-        miso_bytes[6] = 8'h55;
-        miso_bytes[7] = 8'h00;
-
+        miso_bytes[5] = 8'h05;
+        
+        miso_bytes[6] = 8'h55; // Z LSB
+        miso_bytes[7] = 8'h00; // Z MSB
+        
         spi_miso   = 1'b0;
         byte_index = 0;
         bit_index  = 7;
         tx_byte    = 8'h00;
     end
 
-    always @(negedge spi_cs_n) begin
-        byte_index = 0;
-        bit_index  = 7;
-        tx_byte    = miso_bytes[0];
-    end
+  always @(negedge spi_cs_n) begin
+    byte_index <= 0;
+    bit_index  <= 7;
+    spi_miso   <= miso_bytes[0][7];
+end
 
-    // SPI modo 0:
-    // esclavo cambia MISO en flanco negativo,
-    // maestro captura MISO en flanco positivo.
-    always @(negedge spi_sclk) begin
-        if (!spi_cs_n) begin
-            spi_miso <= tx_byte[bit_index];
-
-            if (bit_index == 0) begin
-                bit_index = 7;
-                byte_index++;
-
-                if (byte_index < 8)
-                    tx_byte = miso_bytes[byte_index];
-                else
-                    tx_byte = 8'h00;
+always @(negedge spi_sclk or posedge spi_cs_n) begin
+    if (spi_cs_n) begin
+        byte_index <= 0;
+        bit_index  <= 7;
+        spi_miso   <= 1'b0;
+    end else begin
+        if (bit_index == 0) begin
+            if (byte_index < 7) begin
+                byte_index <= byte_index + 1;
+                bit_index  <= 7;
+                spi_miso   <= miso_bytes[byte_index + 1][7];
             end else begin
-                bit_index--;
+                spi_miso <= 1'b0;
             end
+        end else begin
+            bit_index <= bit_index - 1;
+            spi_miso  <= miso_bytes[byte_index][bit_index - 1];
         end
     end
-
+end
     // ------------------------------------------------------------
     // Tareas MMIO
     // ------------------------------------------------------------
@@ -196,11 +193,12 @@ module tb_spi_adxl362;
         $display("Y = %h", data_xy[31:16]);
         $display("Z = %h", data_z[15:0]);
 
-        assert (data_xy[15:0] == 16'h0123)
+       assert (data_xy[15:0] == 16'h0123)
             else $error("Error en X. Esperado 0123, recibido %h", data_xy[15:0]);
+            
+            assert (data_xy[31:16] == 16'h05BC)
+              else $error("Error en Y. Esperado 05BC, recibido %h", data_xy[31:16]);
 
-        assert (data_xy[31:16] == 16'h0ABC)
-            else $error("Error en Y. Esperado 0ABC, recibido %h", data_xy[31:16]);
 
         assert (data_z[15:0] == 16'h0055)
             else $error("Error en Z. Esperado 0055, recibido %h", data_z[15:0]);
