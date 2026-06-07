@@ -1,0 +1,4 @@
+ERROR: Exception caught trying to open file C:\Users\bolan\Pictures\Laboratorio2\Camino1a\Vamos_PS1\Vamos_PS1.runs\impl_1/runme.log
+	Exception name: Error
+	Exception error code: 70
+	Exception message: Permission denied
