@@ -1,66 +1,98 @@
 import pygame
 import random
+import serial
+import os
 
 pygame.init()
 
+# =========================
+# Rutas de archivos
+# =========================
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ASSETS_DIR = os.path.join(BASE_DIR, "assets")
 
+# =========================
+# UART FPGA
+# =========================
+PUERTO = "COM4"   # CAMBIAR por el COM real de la Nexys
+BAUD = 9600
+
+ser = serial.Serial(PUERTO, BAUD, timeout=0)
+
+# =========================
+# Ventana
+# =========================
 ANCHO = 800
 ALTO = 600
 
 pantalla = pygame.display.set_mode((ANCHO, ALTO))
-pygame.display.set_caption("Conejo Matrero")
+pygame.display.set_caption("Conejo Matrero FPGA")
 
+reloj = pygame.time.Clock()
 
-#zanahorias
+# =========================
+# Colores
+# =========================
+BLANCO = (255, 255, 255)
+
+# =========================
+# Cargar imágenes
+# =========================
 zanahorias = []
 
 for i in range(1, 7):
     img = pygame.image.load(
-        f"assets/zanahoria{i}.png"
+        os.path.join(ASSETS_DIR, f"zanahoria{i}.png")
     ).convert_alpha()
 
     img = pygame.transform.scale(img, (50, 50))
-
     zanahorias.append(img)
 
-#explosiones
 explosiones_img = []
 
 for i in range(1, 7):
     img = pygame.image.load(
-        f"assets/explosion{i}.png"
+        os.path.join(ASSETS_DIR, f"explosion{i}.png")
     ).convert_alpha()
 
     img = pygame.transform.scale(img, (60, 60))
-
     explosiones_img.append(img)
 
-# Fondo
-fondo = pygame.image.load("assets/fondo.png").convert()
+fondo = pygame.image.load(
+    os.path.join(ASSETS_DIR, "fondo.png")
+).convert()
 
-# Ajustarlo al tamaño de la ventana
 fondo = pygame.transform.scale(fondo, (ANCHO, ALTO))
 
-reloj = pygame.time.Clock()
+conejo_idle = pygame.image.load(
+    os.path.join(ASSETS_DIR, "conejo_idle.png")
+).convert_alpha()
 
-# Colores
-NEGRO = (10, 10, 20)
-BLANCO = (255, 255, 255)
-AZUL = (0, 200, 255)
-ROJO = (255, 70, 70)
-VERDE = (80, 255, 120)
+conejo_walk = pygame.image.load(
+    os.path.join(ASSETS_DIR, "conejo_walk.png")
+).convert_alpha()
 
-# Cargar sprites del conejo
-conejo_idle = pygame.image.load("assets/conejo_idle.png").convert_alpha()
-conejo_walk = pygame.image.load("assets/conejo_walk.png").convert_alpha()
-conejo_jump = pygame.image.load("assets/conejo_jump.png").convert_alpha()
+conejo_jump = pygame.image.load(
+    os.path.join(ASSETS_DIR, "conejo_jump.png")
+).convert_alpha()
 
-# Escalar sprites
 conejo_idle = pygame.transform.scale(conejo_idle, (150, 150))
 conejo_walk = pygame.transform.scale(conejo_walk, (150, 150))
 conejo_jump = pygame.transform.scale(conejo_jump, (150, 150))
 
+abejas = []
+
+for i in range(1, 4):
+    img = pygame.image.load(
+        os.path.join(ASSETS_DIR, f"abeja{i}.png")
+    ).convert_alpha()
+
+    img = pygame.transform.scale(img, (77, 75))
+    abejas.append(img)
+
+# =========================
 # Jugador
+# =========================
 conejo_w = 150
 conejo_h = 150
 conejo_x = ANCHO // 2 - conejo_w // 2
@@ -68,7 +100,9 @@ conejo_y = ALTO - 150
 vel_conejo = 8
 estado_conejo = "idle"
 
+# =========================
 # Bala
+# =========================
 bala_w = 5
 bala_h = 15
 bala_x = 0
@@ -77,7 +111,9 @@ bala_activa = False
 vel_bala = 10
 bala_frame = 0
 
+# =========================
 # Enemigos
+# =========================
 enemigos = []
 filas = 3
 columnas = 8
@@ -105,23 +141,42 @@ fuente_gameover = pygame.font.SysFont(None, 64)
 ejecutando = True
 
 explosiones = []
-abejas = []
-
-for i in range(1, 4):
-        img = pygame.image.load(
-            f"assets/abeja{i}.png"
-        ).convert_alpha()
-
-        img = pygame.transform.scale(img, (77, 75))
-
-        abejas.append(img)
-        
 frame_abeja = 0
 
+ultimo_comando = "S"
+
+
+def leer_fpga():
+    global ultimo_comando
+
+    while ser.in_waiting > 0:
+        dato = ser.read(1).decode(errors="ignore").upper()
+
+        if dato in ["A", "D", "W", "S"]:
+            ultimo_comando = dato
+            print("FPGA:", dato)
+
+    return ultimo_comando
+
+
+def reiniciar_enemigos():
+    enemigos.clear()
+
+    for fila in range(filas):
+        for col in range(columnas):
+            x = 80 + col * espacio_x
+            y = 60 + fila * espacio_y
+            enemigos.append(
+                pygame.Rect(x, y, enemigo_w, enemigo_h)
+            )
+
+
 def pantalla_game_over(pantalla, puntaje, fuente):
+    global ultimo_comando
+
+    ultimo_comando = "S"
 
     while True:
-
         pantalla.fill((0, 0, 0))
 
         titulo = fuente.render(
@@ -155,21 +210,30 @@ def pantalla_game_over(pantalla, puntaje, fuente):
 
         pygame.display.update()
 
-        for evento in pygame.event.get():
+        comando = leer_fpga()
 
+        if comando == "W":
+            ultimo_comando = "S"
+            return True
+
+        if comando == "S":
+            return False
+
+        for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
                 return False
 
             if evento.type == pygame.KEYDOWN:
-
                 if evento.key == pygame.K_w:
                     return True
 
                 if evento.key == pygame.K_s:
                     return False
 
+
 while ejecutando:
     reloj.tick(60)
+
     frame_abeja += 0.15
 
     if frame_abeja >= len(abejas):
@@ -179,26 +243,44 @@ while ejecutando:
         if evento.type == pygame.QUIT:
             ejecutando = False
 
-    # -------------------------------
-    # Entrada temporal con teclado
-    # Luego esto se cambia por FPGA
-    # -------------------------------
-    teclas = pygame.key.get_pressed()
+    # =========================
+    # Entrada FPGA
+    # =========================
+    comando = leer_fpga()
 
     x_coord = 0
     z_coord = 0
- 
- #----------------------------------Cambiar luego
-    # ----------------------------------
-    # Cambiar luego por coordenadas FPGA
-    # ----------------------------------
+
+    if comando == "A":
+        x_coord = -1
+
+    elif comando == "D":
+        x_coord = 1
+
+    elif comando == "W":
+        z_coord = 1
+        ultimo_comando = "S"
+
+    elif comando == "S":
+        x_coord = 0
+
+    # =========================
+    # Teclado de respaldo
+    # =========================
+    teclas = pygame.key.get_pressed()
+
     if teclas[pygame.K_a]:
         x_coord = -1
+
     if teclas[pygame.K_d]:
         x_coord = 1
+
     if teclas[pygame.K_SPACE]:
         z_coord = 1
 
+    # =========================
+    # Movimiento conejo
+    # =========================
     conejo_x += x_coord * vel_conejo
 
     if x_coord != 0:
@@ -206,24 +288,33 @@ while ejecutando:
     else:
         estado_conejo = "idle"
 
+    if z_coord == 1:
+        estado_conejo = "jump"
+
     if conejo_x < 0:
         conejo_x = 0
+
     if conejo_x > ANCHO - conejo_w:
         conejo_x = ANCHO - conejo_w
 
-    conejo_rect = pygame.Rect(conejo_x, conejo_y, conejo_w, conejo_h)
+    conejo_rect = pygame.Rect(
+        conejo_x,
+        conejo_y,
+        conejo_w,
+        conejo_h
+    )
 
+    # =========================
+    # Disparo
+    # =========================
     if z_coord == 1 and not bala_activa:
         bala_x = conejo_x + conejo_w // 2 - bala_w // 2
         bala_y = conejo_y
         bala_frame = 0
         bala_activa = True
 
-    # Movimiento de la bala
     if bala_activa:
         bala_y -= vel_bala
-
-        # Animación de la zanahoria
         bala_frame += 0.2
 
         if bala_frame >= len(zanahorias):
@@ -232,9 +323,16 @@ while ejecutando:
         if bala_y < 0:
             bala_activa = False
 
-    bala_rect = pygame.Rect(bala_x, bala_y, bala_w, bala_h)
+    bala_rect = pygame.Rect(
+        bala_x,
+        bala_y,
+        bala_w,
+        bala_h
+    )
 
-    # Movimiento de enemigos
+    # =========================
+    # Movimiento enemigos
+    # =========================
     mover_abajo = False
 
     for enemigo in enemigos:
@@ -245,10 +343,13 @@ while ejecutando:
 
     if mover_abajo:
         direccion_enemigos *= -1
+
         for enemigo in enemigos:
             enemigo.y += bajada_enemigos
 
-       # Colisión bala-enemigo
+    # =========================
+    # Colisión bala-enemigo
+    # =========================
     if bala_activa:
         for enemigo in enemigos[:]:
             if bala_rect.colliderect(enemigo):
@@ -263,7 +364,9 @@ while ejecutando:
                 puntaje += 10
                 break
 
-    # Colisión enemigo-conejo o enemigo llega abajo
+    # =========================
+    # Colisión enemigo-conejo
+    # =========================
     for enemigo in enemigos[:]:
         if enemigo.colliderect(conejo_rect) or enemigo.bottom >= ALTO:
             enemigos.remove(enemigo)
@@ -285,31 +388,21 @@ while ejecutando:
                     conejo_x = ANCHO // 2 - conejo_w // 2
                     conejo_y = ALTO - 150
 
-                    enemigos.clear()
-
-                    for fila in range(filas):
-                        for col in range(columnas):
-                            x = 80 + col * espacio_x
-                            y = 60 + fila * espacio_y
-                            enemigos.append(
-                                pygame.Rect(x, y, enemigo_w, enemigo_h)
-                            )
+                    reiniciar_enemigos()
 
                 else:
                     ejecutando = False
 
-
-    # Reiniciar enemigos si se eliminan todos
+    # =========================
+    # Nuevo nivel
+    # =========================
     if len(enemigos) == 0:
         vel_enemigos += 1
+        reiniciar_enemigos()
 
-        for fila in range(filas):
-            for col in range(columnas):
-                x = 80 + col * espacio_x
-                y = 60 + fila * espacio_y
-                enemigos.append(pygame.Rect(x, y, enemigo_w, enemigo_h))
-
+    # =========================
     # Dibujar
+    # =========================
     pantalla.blit(fondo, (0, 0))
 
     if estado_conejo == "idle":
@@ -321,7 +414,6 @@ while ejecutando:
     elif estado_conejo == "jump":
         pantalla.blit(conejo_jump, (conejo_x, conejo_y))
 
-    # Dibujar zanahoria
     if bala_activa:
         frame = int(bala_frame)
 
@@ -330,15 +422,12 @@ while ejecutando:
             (bala_x - 20, bala_y - 20)
         )
 
-    # Dibujar enemigos
     for enemigo in enemigos:
-
         pantalla.blit(
-        abejas[int(frame_abeja)],
-        (enemigo.x, enemigo.y)
-    )
+            abejas[int(frame_abeja)],
+            (enemigo.x, enemigo.y)
+        )
 
-    # Dibujar explosiones
     for explosion in explosiones[:]:
         frame = int(explosion["frame"])
 
@@ -351,15 +440,23 @@ while ejecutando:
 
         if explosion["frame"] >= len(explosiones_img):
             explosiones.remove(explosion)
-    
-        # Mostrar puntaje y vidas
-    texto_puntaje = fuente.render("Puntaje: " + str(puntaje), True, BLANCO)
-    texto_vidas = fuente.render("Vidas: " + str(vidas), True, BLANCO)
+
+    texto_puntaje = fuente.render(
+        "Puntaje: " + str(puntaje),
+        True,
+        BLANCO
+    )
+
+    texto_vidas = fuente.render(
+        "Vidas: " + str(vidas),
+        True,
+        BLANCO
+    )
 
     pantalla.blit(texto_puntaje, (10, 10))
     pantalla.blit(texto_vidas, (650, 10))
 
-
     pygame.display.update()
 
+ser.close()
 pygame.quit()
