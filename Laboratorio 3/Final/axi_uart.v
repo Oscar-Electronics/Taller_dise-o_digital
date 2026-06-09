@@ -49,6 +49,8 @@ module axi_uart_slave (
     reg tx_start;
     reg rx_pending;
 
+    reg ctrl_bit0_old;
+
     uart #(
         .SystemClockFreq(100_000_000),
         .BaudRate(9600)
@@ -73,6 +75,12 @@ module axi_uart_slave (
         .o_rts()
     );
 
+    wire write_handshake;
+    assign write_handshake =
+        (!S_AXI_BVALID) &&
+        S_AXI_AWVALID &&
+        S_AXI_WVALID;
+
     always @(posedge ACLK or negedge ARESETN) begin
         if (!ARESETN) begin
             uart_tx_data <= 8'd0;
@@ -84,6 +92,8 @@ module axi_uart_slave (
 
             tx_start     <= 1'b0;
             rx_pending   <= 1'b0;
+
+            ctrl_bit0_old <= 1'b0;
 
             S_AXI_AWREADY <= 1'b0;
             S_AXI_WREADY  <= 1'b0;
@@ -102,40 +112,60 @@ module axi_uart_slave (
             S_AXI_WREADY  <= 1'b0;
             S_AXI_ARREADY <= 1'b0;
 
+            //--------------------------------------------------
+            // TX: enviar una sola vez
+            //--------------------------------------------------
             if (tx_start && uart_tx_rdy) begin
                 uart_tx_data <= uart_tx_reg;
                 uart_tx_req  <= 1'b1;
                 tx_start     <= 1'b0;
             end
 
+            //--------------------------------------------------
+            // RX: capturar un byte una sola vez hasta que CPU limpie
+            //--------------------------------------------------
             if (uart_rx_rdy && !rx_pending) begin
                 uart_rx_reg <= uart_rx_data;
                 rx_pending  <= 1'b1;
                 uart_rx_req <= 1'b1;
             end
 
-            if (!S_AXI_BVALID && S_AXI_AWVALID && S_AXI_WVALID) begin
+            //--------------------------------------------------
+            // AXI WRITE
+            //--------------------------------------------------
+            if (write_handshake) begin
                 S_AXI_AWREADY <= 1'b1;
                 S_AXI_WREADY  <= 1'b1;
                 S_AXI_BVALID  <= 1'b1;
                 S_AXI_BRESP   <= 2'b00;
 
                 case (S_AXI_AWADDR)
+
                     UART_CTRL: begin
-                        if (S_AXI_WDATA[0])
+                        // Solo iniciar TX en flanco 0->1 del bit 0
+                        if (S_AXI_WDATA[0] && !ctrl_bit0_old) begin
                             tx_start <= 1'b1;
-                        else
-                            rx_pending <= 1'b0;
+                        end
+
+                        ctrl_bit0_old <= S_AXI_WDATA[0];
+
+                        // Si CPU escribe 0, limpiar RX y rearmer bit0
+                        if (S_AXI_WDATA[0] == 1'b0) begin
+                            rx_pending    <= 1'b0;
+                            ctrl_bit0_old <= 1'b0;
+                        end
                     end
 
                     UART_DATA0: begin
-                        if (S_AXI_WSTRB[0])
+                        if (S_AXI_WSTRB[0]) begin
                             uart_tx_reg <= S_AXI_WDATA[7:0];
+                        end
                     end
 
                     UART_DATA1: begin
-                        if (S_AXI_WSTRB[0])
+                        if (S_AXI_WSTRB[0]) begin
                             uart_rx_reg <= S_AXI_WDATA[7:0];
+                        end
                     end
 
                     default: begin
@@ -143,9 +173,13 @@ module axi_uart_slave (
                 endcase
             end
 
-            if (S_AXI_BVALID && S_AXI_BREADY)
+            if (S_AXI_BVALID && S_AXI_BREADY) begin
                 S_AXI_BVALID <= 1'b0;
+            end
 
+            //--------------------------------------------------
+            // AXI READ
+            //--------------------------------------------------
             if (!S_AXI_RVALID && S_AXI_ARVALID) begin
                 S_AXI_ARREADY <= 1'b1;
                 S_AXI_RVALID  <= 1'b1;
@@ -166,8 +200,9 @@ module axi_uart_slave (
                 endcase
             end
 
-            if (S_AXI_RVALID && S_AXI_RREADY)
+            if (S_AXI_RVALID && S_AXI_RREADY) begin
                 S_AXI_RVALID <= 1'b0;
+            end
         end
     end
 
