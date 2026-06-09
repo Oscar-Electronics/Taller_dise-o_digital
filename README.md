@@ -9,7 +9,16 @@ Estudiantes Grupo 2: <br>
 2022195304 - Lobo Campos Andrés <br>
 2021021770 - Sánchez Herrera Angélica 
 
-Laboratio 1:
-En la carpeta Laboratorio 1 se encuentran la resolución de los 4 problemas, cada uno con su respectivo README, en el que se puede encontrar información sobre el problema, el repositirio específico del problema, indicación de cuáles archivos implementar en Vivado para el debido funcionamiento, además de un link con un video de la verificación de la implementación en la FPGA para los problemas pertinentes y la lógica utilizada.
+En las siguientes carpetas se encuentran los proyectos desarrollados durante el I Semestre de 2026. Cada carpeta incluye su respectivo instructivo, README, documentación y los archivos necesarios para la implementación y utilización en la FPGA Nexys 4 DDR.
 
-En el PDF titulado (Documentacion Lab 1 - Oscar, Raquel, Andres y Angelica) se puede encontrar más a detalle los procesos y el cómo se completo cada problema en el mismo archivo.
+* **Laboratorio 1:**
+  * **Ejercicio 1.** Switches, botones y LEDs
+  * **Ejercicio 2.** Multiplexor 4-to-1
+  * **Ejercicio 3.** Modulación de ancho de pulso
+  * **Ejercicio 4.** Interfaz Serial Asíncrona
+    
+*  **Laboratorio 2:**
+    * Implementación de un microcontrolador parte 1, protocolo axi-lite4 y calculadora
+      
+* **Laboratorio 3:**
+   *  Implementación de un Microcontrolador parte 2, protoloco spi y acelerométro de FPGA Nexxys 4DDR
