@@ -8,6 +8,8 @@ module top_microprocesador (
     output wire uart_tx,
     output wire [15:0] leds,
 
+    input  wire  sw0,
+
     input  wire acl_miso,
     output wire acl_mosi,
     output wire acl_sclk,
@@ -69,6 +71,10 @@ module top_microprocesador (
         (mem_addr >= 32'h0004_0000) &&
         (mem_addr <= 32'h0004_1FFC);
 
+    wire sel_sw =
+        mem_valid &&
+        (mem_addr == 32'h0000_2000);
+
     wire sel_axi =
         mem_valid &&
         (
@@ -92,13 +98,12 @@ module top_microprocesador (
 
     reg [31:0] rom_mem [0:2047];
 
-    initial begin
-        $display("LEYENDO HEX NUEVO");
-        $readmemh(
-            "C:/Users/bolan/Pictures/Laboratorio2/Camino1a/Vamos_PS1/Vamos15.hex",
-            rom_mem
-        );
-    end
+initial begin
+    $readmemh(
+        "C:/Users/bolan/Pictures/Laboratorio2/Camino1a/Vamos_PS1/firmware.hex",
+        rom_mem
+    );
+end
 
     wire [31:0] rom_data;
     assign rom_data = rom_mem[mem_addr[11:2]];
@@ -357,6 +362,11 @@ module top_microprocesador (
                     mem_ready = ram_pending;
                     mem_rdata = ram_rdata;
                 end
+            end
+
+            else if (sel_sw) begin
+                mem_ready = 1'b1;
+                mem_rdata = {16'd0, sw0};
             end
 
             else if (sel_axi) begin
