@@ -50,7 +50,7 @@ static int spi_read_xyz(int *x, int *y, int *z)
 static char accel_to_cmd(int x, int y, int z)
 {
     int th_x = 300;
-    int th_y = 300;
+    int th_y = 700;
     int th_z = -1500;
 
     if (y > th_y)
