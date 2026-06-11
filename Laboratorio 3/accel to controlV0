@@ -1,0 +1,696 @@
+//librerias que se estan usando
+using System;
+using System.IO.Ports;
+using System.Windows.Forms;
+using System.Drawing;
+using System.Runtime.InteropServices;
+namespace accel_a_control_v0
+{
+    public partial class Form1 : Form
+    {
+        //variables globales
+        // extraer puertos seriales
+        SerialPort serialPort;
+        // aceleraciones
+        double accelX = 0;
+        double accelY = 0;
+        double accelZ = 0;
+        //velocidades (notas: estas se llegan a disparar, no se usan en los calculos, se muestran para debug)
+        double velX = 0;
+        double velY = 0;
+        double velZ = 0;
+        //angulos
+        double pitch = 0;
+        double roll = 0;
+        // extraer tiempo
+        DateTime lastTime = DateTime.Now;
+        //variables para detectar que se presiona una tecla segun la inclinacion
+        bool wPressed = false;
+        bool aPressed = false;
+        bool sPressed = false;
+        bool dPressed = false;
+        bool spacePressed = false;
+        bool upPressed = false;
+        bool downPressed = false;
+        bool leftPressed = false;
+        bool rightPressed = false;
+        [DllImport("user32.dll")]
+        static extern void keybd_event(
+    byte bVk,
+    byte bScan,
+    int dwFlags,
+    int dwExtraInfo);
+       [DllImport("user32.dll")]
+        static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
+        [StructLayout(LayoutKind.Sequential)]
+        struct INPUT
+        {
+            public uint type;
+            public InputUnion U;
+        }
+        [StructLayout(LayoutKind.Explicit)]
+        struct InputUnion
+        {
+            [FieldOffset(0)]
+            public KEYBDINPUT ki;
+        }
+        [StructLayout(LayoutKind.Sequential)]
+        struct KEYBDINPUT
+        {
+            public ushort wVk;
+            public ushort wScan;
+            public uint dwFlags;
+            public uint time;
+            public IntPtr dwExtraInfo;
+        }
+        const int INPUT_KEYBOARD = 1;
+        const uint KEYEVENTF_KEYUP = 0x0002;
+        [DllImport("user32.dll")]
+        static extern bool SetCursorPos(
+    int X,
+    int Y
+);
+        //metodo para presionar teclas (este funciona mal)
+        private void PressKey(ushort key, ref bool state)
+        {
+            if (!state)
+            {
+                INPUT input = new INPUT();
+                input.type = 1;
+                input.U.ki.wVk = key;
+                SendInput(
+                    1,
+                    new INPUT[] { input },
+                    Marshal.SizeOf(typeof(INPUT))
+                );
+                state = true;
+            }
+        }
+        //metodo para soltar teclas (este funciona mal)
+        private void ReleaseKey(ushort key, ref bool state)
+        {
+            if (state)
+            {
+                INPUT input = new INPUT();
+                input.type = 1;
+                input.U.ki.wVk = key;
+                input.U.ki.dwFlags = KEYEVENTF_KEYUP;
+                SendInput(
+                    1,
+                    new INPUT[] { input },
+                    Marshal.SizeOf(typeof(INPUT))
+                );
+                state = false;
+            }
+        }
+        //metodo para presionar teclas (este funciona bien para los juegos)
+        //nota: son legacy porque son los primeros que se probaron
+        private void LegacyPressKey(byte key)
+        {
+            keybd_event(key, 0, 0, 0);
+        }
+        //metodo para presionar teclas 
+        private void LegacyReleaseKey(byte key)
+        {
+            keybd_event(key, 0, (int)KEYEVENTF_KEYUP, 0);
+        }
+        public Form1()
+        {
+            InitializeComponent();
+        }
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            // Baudrates
+            comboBoxBaud.Items.Add("9600");
+            comboBoxBaud.Items.Add("19200");
+            comboBoxBaud.Items.Add("38400");
+            comboBoxBaud.Items.Add("57600");
+            comboBoxBaud.Items.Add("115200");
+            comboBoxBaud.SelectedIndex = 4;
+            // Buscar puertos COM automáticamente
+            comboBoxPorts.Items.AddRange(SerialPort.GetPortNames());
+            //si no hay puertos COMdisponibles no muestra ninguno
+            if (comboBoxPorts.Items.Count > 0)
+            {
+                comboBoxPorts.SelectedIndex = 0;
+            }
+            // Estado inicial
+            labelStatus.Text = "● Desconectado";
+            labelStatus.ForeColor = Color.Red;
+        }
+        //conectar COM
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            try
+            {
+                serialPort = new SerialPort();
+                // Puerto COM seleccionado
+                serialPort.PortName = comboBoxPorts.Text;
+                // Baudrate seleccionado
+                serialPort.BaudRate = int.Parse(comboBoxBaud.Text);
+                // Evento UART RX
+                serialPort.DataReceived += SerialPort_DataReceived;
+                // Abrir puerto
+                serialPort.Open();
+                // Cambiar estado
+                labelStatus.Text = "● Conectado";
+                labelStatus.ForeColor = Color.Green;
+            }
+            //para exepciones enviar Error
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                labelStatus.Text = "● Error";
+                labelStatus.ForeColor = Color.Red;
+            }
+        }
+        //boton para iniciar el accelerometro
+        private void buttonStart_Click(object sender, EventArgs e)
+        {
+            if (serialPort != null && serialPort.IsOpen)
+            {
+                // Enviar comando a FPGA
+                serialPort.Write("S/n");
+                labelStatus.Text = "● START enviado";
+            }
+            else
+            {
+                MessageBox.Show("Puerto no conectado");
+            }
+        }
+        private void textBoxData_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+        /*
+         * funcion para arreglar los valores de la UART, ya no hace falta la UART evia bien los datos
+        private string FixXValue(string s)
+        {
+            // Caso --11 -> -11
+            if (s.StartsWith("--"))
+            {
+                s = "-" + s.Substring(2);
+            }
+            // Caso 1122 -> 122
+            // Caso 1166 -> 166
+            // Caso 1199 -> 199
+            if (s.Length == 4)
+            {
+                s = s.Substring(1);
+            }
+            return s;
+        }
+        */
+        //cuando se esta recibiendo datos hace lo siguiente
+        private void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+            try
+            {
+                //leer datos para acomodarlos en el text box de monitos serial y usarlos en los calculos
+                string data = serialPort.ReadLine();
+                Invoke(new Action(() =>
+                {
+                    textBoxData.AppendText(
+            "[" + data + "]" +
+            Environment.NewLine
+        );
+                    string[] parts = data.Trim().Split(' ');
+                    if (parts.Length != 3)
+                        return;
+                    double x;
+                    double y;
+                    double z;
+                    if (!double.TryParse(parts[0].Split('=')[1], out x))
+                        return;
+
+                    if (!double.TryParse(parts[1].Split('=')[1], out y))
+                        return;
+
+                    if (!double.TryParse(parts[2].Split('=')[1], out z))
+                        return;
+                    accelX = x;
+                    accelY = y;
+                    accelZ = z;
+                    /*
+                     * esta seccion es para cuando la UART envia en formato XX==####
+                    string[] parts = data.Trim().Split(
+                        new char[] { ' ' },
+                        StringSplitOptions.RemoveEmptyEntries
+                    );
+                    if (parts.Length < 3)
+                        return;
+                    // Extraer X
+                    string xStr = parts[0].Replace("XX==", "");
+                    xStr = FixXValue(xStr);
+                    // Extraer Y
+                    string yStr = parts[1].Replace("Y=", "");
+                    // Extraer Z
+                    string zStr = parts[2].Replace("Z=", "");
+                    double x, y, z;
+                    if (!double.TryParse(xStr, out x))
+                        return;
+                    if (!double.TryParse(yStr, out y))
+                        return;
+                    if (!double.TryParse(zStr, out z))
+                        return;
+                    accelX = x;
+                    accelY = y;
+                    accelZ = z;
+                    */
+                    //escribe los datos de la acceleracion en el monitor  serial
+                    textBoxParsed.AppendText(
+                      $"X={accelX:F0} Y={accelY:F0} Z={accelZ:F0}" +
+                        Environment.NewLine
+                        );
+                    //limpia los textbox cuando se acumulan 2000 lineas
+                    if (textBoxParsed.Lines.Length > 2000)
+                    {
+                        textBoxParsed.Clear();
+                    }
+                    if (textBoxData.Lines.Length > 2000)
+                    {
+                        textBoxData.Clear();
+                    }
+                    /*
+                    labelAccelX.Text = "X: " + accelX.ToString("F0");
+                    labelAccelY.Text = "Y: " + accelY.ToString("F0");
+                    labelAccelZ.Text = "Z: " + accelZ.ToString("F0");
+                    */
+                    // se escriben las aceleracione en combobox
+                    labelAccelX.Text = "X: " + accelX.ToString("F2");
+                    labelAccelY.Text = "Y: " + accelY.ToString("F2");
+                    labelAccelZ.Text = "Z: " + accelZ.ToString("F2");
+                    // Delta de tiempo
+                    DateTime currentTime = DateTime.Now;
+                    double dt = (currentTime - lastTime).TotalSeconds;
+                    lastTime = currentTime;
+                    // calculo de las velocidades
+                    velX += accelX * dt;
+                    velY += accelY * dt;
+                    velZ += accelZ * dt;
+                    // se escriben las velocidades en combobox
+                    labelVelX.Text = "X: " + velX.ToString("F2");
+                    labelVelY.Text = "Y: " + velY.ToString("F2");
+                    labelVelZ.Text = "Z: " + velZ.ToString("F2");
+                    // calculo de los angulos
+                    pitch =
+                    Math.Atan2(
+                        accelY,
+                        Math.Sqrt(accelX * accelX + accelZ * accelZ)
+                    ) * 180.0 / Math.PI;
+                    roll =
+                        Math.Atan2(
+                            -accelX,
+                            Math.Sqrt(accelY * accelY + accelZ * accelZ)
+                        ) * 180.0 / Math.PI;
+                    // se escriben los angulos en combobox
+                    labelPitch.Text = "Pitch: " + pitch.ToString("F2");
+                    labelRoll.Text = "Roll: " + roll.ToString("F2");
+                    //proteccion por si seleccionan varios modos de control a la vez
+                    int modos = 0;
+                    if (checkBoxControl.Checked) modos++; //este modo esta oculto
+                    if (checkBoxLegacy.Checked) modos++;
+                    if (checkBoxMouse.Checked) modos++;
+                    if (checkBoxArrows.Checked) modos++;
+                    if (modos > 1)
+                    {
+                        labelControl.Text = "ERROR";
+                        return;
+                    }
+                    // modo de control wasd este esta oculto en la app porque no funciona bien
+                    if (checkBoxControl.Checked)
+                        checkBoxMouse.Checked = false;
+                    checkBoxLegacy.Checked = false;
+                    labelControl.Text = "CENTRO";
+                    // W (Pitch negativo)
+                    if (!wPressed && pitch < -30)
+                    {
+                        labelControl.Text = "W";
+                        PressKey(0x57, ref wPressed);
+                    }
+                    else if (wPressed && pitch > -15)
+                    {
+                        ReleaseKey(0x57, ref wPressed);
+                    }
+                    // S (Pitch positivo)
+                    if (!sPressed && pitch > 30)
+                    {
+                        labelControl.Text = "S";
+                        PressKey(0x53, ref sPressed);
+                    }
+                    else if (sPressed && pitch < 15)
+                    {
+                        ReleaseKey(0x53, ref sPressed);
+                    }
+                    // A (Roll positivo)
+                    if (!aPressed && roll > 40)
+                    {
+                        labelControl.Text = "A";
+                        PressKey(0x41, ref aPressed);
+                    }
+                    else if (aPressed && roll < 20)
+                    {
+                        ReleaseKey(0x41, ref aPressed);
+                    }
+                    // D (Roll negativo)
+                    if (!dPressed && roll < -40)
+                    {
+                        labelControl.Text = "D";
+                        PressKey(0x44, ref dPressed);
+                    }
+                    else if (dPressed && roll > -20)
+                    {
+                        ReleaseKey(0x44, ref dPressed);
+                    }
+                    // SPACE
+                    double magnitud =
+                        Math.Sqrt(
+                            accelX * accelX +
+                            accelY * accelY +
+                            accelZ * accelZ
+                        );
+                    if (magnitud > 500)
+                    {
+                        labelControl.Text = "SPACE";
+                        PressKey(0x20, ref spacePressed);
+                    }
+                    else
+                    {
+                        ReleaseKey(0x20, ref spacePressed);
+                    }
+                    // Mostrar CENTRO cuando no hay ninguna tecla activa
+                    if (!wPressed &&
+                        !aPressed &&
+                        !sPressed &&
+                        !dPressed &&
+                        !spacePressed)
+                    {
+                        labelControl.Text = "CENTRO";
+                    }
+                    //modo de control WASD legacy, este si funciona
+                    if (checkBoxLegacy.Checked)
+                    {
+                        checkBoxControl.Checked = false;
+                        checkBoxMouse.Checked = false;
+                        //punto muerto del centro
+                        if (Math.Abs(pitch) < 10 &&
+                            Math.Abs(roll) < 10)
+                        {
+                            labelControl.Text = "CENTRO";
+                        }
+                        //W
+                        else if (pitch < -30)
+                        {
+                            wPressed = true;
+                            labelControl.Text = "W";
+                            LegacyPressKey(0x57);
+                        }
+                        else if (wPressed && pitch > -15)
+                        {
+
+                            LegacyReleaseKey(0x57);
+                            wPressed = false;
+                        }
+                        //S
+                        else if (pitch > 30)
+                        {
+                            sPressed = true;
+                            labelControl.Text = "S";
+                            LegacyPressKey(0x53);
+                        }
+                        else if (sPressed && pitch < 15)
+                        {
+
+                            LegacyReleaseKey(0x53);
+                            sPressed = false;
+                        }
+                        //A
+                        else if (roll > 40)
+                        {
+                            aPressed = true;
+                            labelControl.Text = "A";
+                            LegacyPressKey(0x41);
+                        }
+                        else if (aPressed && roll < 20)
+                        {
+
+                            LegacyReleaseKey(0x41);
+                            aPressed = false;
+                        }
+                        //D
+                        else if (roll < -40)
+                        {
+                            dPressed = true;
+                            labelControl.Text = "D";
+                            LegacyPressKey(0x44);
+                        }
+                        else if (dPressed && roll > -20)
+                        {
+
+                            LegacyReleaseKey(0x44);
+                            dPressed = false;
+                        }
+                        //SPACE
+                        double magnitudb =
+                            Math.Sqrt(
+                                accelX * accelX +
+                                accelY * accelY +
+                                accelZ * accelZ
+                            );
+                        if (magnitudb > 500)
+                        {
+                            labelControl.Text = "ESPACIO";
+                            LegacyPressKey(0x20);
+                        }
+                    }
+                    //modo de control del mouse con la FPGA
+                    if (checkBoxMouse.Checked)
+                    {
+                        checkBoxControl.Checked = false;
+                        checkBoxLegacy.Checked = false;
+                        labelControl.Text = "MOUSE";
+                        Point pos = Cursor.Position;
+                        //ounto muerto
+                        if (Math.Abs(roll) < 10)
+                            roll = 0;
+
+                        if (Math.Abs(pitch) < 10)
+                            pitch = 0;
+                        //ajuste de sensibilidad
+                        double sensibilidad = 0.5;
+                        //calculo de como se mueve el mouse
+                        int dx = (int)(-roll * sensibilidad);
+                        int dy = (int)(pitch * sensibilidad);
+                        //mover el mouse
+                        SetCursorPos(
+                            pos.X + dx,
+                            pos.Y + dy
+                        );
+                    }
+                    //control por flechas
+                    if (checkBoxArrows.Checked)
+                    {
+                        checkBoxControl.Checked = false;
+                        checkBoxLegacy.Checked = false;
+                        checkBoxMouse.Checked = false;
+                        labelControl.Text = "CENTRO";
+                        // ARRIBA
+                        if (!upPressed && pitch < -30)
+                        {
+                            labelControl.Text = "↑";
+                            LegacyPressKey(0x26);
+                            upPressed = true;
+                        }
+                        else if (upPressed && pitch > -15)
+                        {
+                            LegacyReleaseKey(0x26);
+                            upPressed = false;
+                        }
+                        // ABAJO
+                        if (!downPressed && pitch > 30)
+                        {
+                            labelControl.Text = "↓";
+                            LegacyPressKey(0x28);
+                            downPressed = true;
+                        }
+                        else if (downPressed && pitch < 15)
+                        {
+                            LegacyReleaseKey(0x28);
+                            downPressed = false;
+                        }
+                        // IZQUIERDA
+                        if (!leftPressed && roll > 40)
+                        {
+                            labelControl.Text = "←";
+                            LegacyPressKey(0x25);
+                            leftPressed = true;
+                        }
+                        else if (leftPressed && roll < 20)
+                        {
+                            LegacyReleaseKey(0x25);
+                            leftPressed = false;
+                        }
+                        // DERECHA
+                        if (!rightPressed && roll < -40)
+                        {
+                            labelControl.Text = "→";
+                            LegacyPressKey(0x27);
+                            rightPressed = true;
+                        }
+                        else if (rightPressed && roll > -20)
+                        {
+                            LegacyReleaseKey(0x27);
+                            rightPressed = false;
+                        }
+                        //ESPACE
+                        double magnituda =
+                            Math.Sqrt(
+                             accelX * accelX +
+                             accelY * accelY +
+                             accelZ * accelZ
+                               );
+                        if (!spacePressed && magnituda > 500)
+                        {
+                            labelControl.Text = "SPACE";
+                            LegacyPressKey(0x20);
+                            spacePressed = true;
+                        }
+                        else if (spacePressed && magnitud < 450)
+                        {
+                            LegacyReleaseKey(0x20);
+                            spacePressed = false;
+                        }
+                        if (!upPressed &&
+                            !downPressed &&
+                            !leftPressed &&
+                            !rightPressed &&
+                            !spacePressed)
+                        {
+                            labelControl.Text = "CENTRO";
+                        }
+                    }
+                }));
+            }
+            catch
+            {
+            }
+         }
+        private void comboBoxBaud_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+        //cuando se preciona el boton para desconectar el puerto COM 
+        private void buttonDisconnect_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                //si el puerto serial no esta vacio lo cierra y muestra desconectado
+                if (serialPort != null && serialPort.IsOpen)
+                {
+                    serialPort.Close();
+                }
+
+                labelStatus.Text = "● Desconectado";
+                labelStatus.ForeColor = Color.Red;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+        private void label2_Click(object sender, EventArgs e)
+        {
+
+        }
+        //boton para limpiar el monitos serial, nota: ya no se ocupa tanto porque el monitor se vacia cuando llega a las 2000 lineas
+        private void buttonClear_Click(object sender, EventArgs e)
+        {
+            textBoxData.Clear();
+        }
+        private void comboBoxPorts_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+        private void label3_Click(object sender, EventArgs e)
+        {
+
+        }
+        private void tabAcceleration_Click(object sender, EventArgs e)
+        {
+
+        }
+        private void labelControl_Click(object sender, EventArgs e)
+        {
+
+        }
+        //boton para buscar puertos COM
+        //como solo buscaba los puertos cuando iniciaba el programa si se conecta la FPGA despues de iniciar el programa no encontraba el puerto COM, este boton es para que los vuelva a buscar
+        private void buttonRefresh_Click(object sender, EventArgs e)
+        {
+            comboBoxPorts.Items.Clear();
+            string[] ports = SerialPort.GetPortNames();
+            Array.Sort(ports);
+            comboBoxPorts.Items.AddRange(ports);
+            if (comboBoxPorts.Items.Count > 0)
+            {
+                comboBoxPorts.SelectedIndex = 0;
+            }
+        }
+        //cuando se selecciona uno de los modos de control se deseleccionan lo otros para evidar que se usen 2 modos de control a la vez
+        private void checkBoxArrows_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBoxArrows.Checked)
+            {
+                checkBoxControl.Checked = false;
+                checkBoxLegacy.Checked = false;
+                checkBoxMouse.Checked = false;
+            }
+        }
+        private void checkBoxControl_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBoxControl.Checked)
+            {
+                checkBoxLegacy.Checked = false;
+                checkBoxMouse.Checked = false;
+                checkBoxArrows.Checked = false;
+            }
+        }
+        private void checkBoxLegacy_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBoxLegacy.Checked)
+            {
+                checkBoxControl.Checked = false;
+                checkBoxMouse.Checked = false;
+                checkBoxArrows.Checked = false;
+            }
+        }
+       private void checkBoxMouse_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBoxMouse.Checked)
+            {
+                checkBoxControl.Checked = false;
+                checkBoxLegacy.Checked = false;
+                checkBoxArrows.Checked = false;
+            }
+        }
+        //Cuando se presiona el boton de detener el accelerometro le envia el comando para parar
+        private void buttonFinish_Click(object sender, EventArgs e)
+        {
+            if (serialPort != null && serialPort.IsOpen)
+            {
+                serialPort.Write("F/n");
+
+                labelStatus.Text = "● FINISH enviado";
+            }
+            else
+            {
+                MessageBox.Show("Puerto no conectado");
+            }
+        }
+    }
+}
+
+
+Agregar carpeta de Releases para los archivos .bit
+
+
