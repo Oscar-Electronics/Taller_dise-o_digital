@@ -22,3 +22,5 @@ En las siguientes carpetas se encuentran los proyectos desarrollados durante el 
       
 * **Laboratorio 3:**
    *  Implementación de un Microcontrolador parte 2, protoloco spi y acelerométro de FPGA Nexxys 4DDR
+   *Implementacion en juego https://youtu.be/WCYDIo5FKts
+   *Implementacion en la aplicacion https://youtu.be/v9YM4Fb4Kww
